@@ -52,10 +52,9 @@ The agricultural sector faces significant challenges in connecting farmers direc
 ## 4. Tools & Technologies
 
 ### Languages/Frameworks:
-- **Frontend**: React.js with TypeScript for responsive web interface
-- **Backend**: Node.js with Express.js or Python with Django/FastAPI
-- **Database**: PostgreSQL for relational data, Redis for caching
-- **Mobile**: React Native (future consideration)
+- **Frontend**: Vue.js for responsive web interface
+- **Backend**: Python with Django/FastAPI
+- **Database**: Firebase for relational data, Redis for caching
 
 ### Integration approach:
 - **REST APIs**: Primary communication protocol between services
@@ -66,18 +65,18 @@ The agricultural sector faces significant challenges in connecting farmers direc
 ### Repos/Services:
 - **Version Control**: GitHub for source code management
 - **CI/CD**: GitHub Actions for automated testing and deployment
-- **Cloud Platform**: AWS or Azure for hosting and infrastructure
+- **Cloud Platform**: Hostinger for hosting and infrastructure
 - **Monitoring**: Application performance monitoring and logging services
 
 ### Testing tools:
-- **Unit Testing**: Jest (JavaScript) or pytest (Python)
+- **Unit Testing**: pytest (Python)
 - **Integration Testing**: Supertest for API testing
-- **End-to-End Testing**: Cypress or Playwright
-- **Load Testing**: Artillery or k6 for performance testing
+- **End-to-End Testing**: Playwright
+- **Load Testing**: Artillery for performance testing
 
 ### Additional Tools:
 - **Documentation**: Markdown with automated API documentation
 - **Security**: OAuth 2.0 for authentication, JWT for authorization
-- **Payment Integration**: Stripe or PayPal for payment processing
+- **Payment Integration**: Gcash for payment processing
 - **Notification Services**: SendGrid for email, Twilio for SMS
 - **File Storage**: AWS S3 or Azure Blob Storage for images and documents
