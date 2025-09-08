@@ -7,7 +7,7 @@
 ## Team Members & Roles
 - Jan Russel Salazar — Project Lead  
 - Aerone John Grefalda — Documentation Lead  
-- Arwin Madeja — Diagrammer / Git & Version Control Lead  
+- Arwin Madeja — Diagrammer
 - Kenneth Inciong — Researcher  
 
 ## Project Summary
