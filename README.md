@@ -22,5 +22,5 @@ AniPalengke is a web and mobile-based agricultural marketplace that connects far
 ## Getting Started
 - Clone:  
   ```bash
-  git clone <REPO_URL>
+  git clone https://github.com/Tokikaze0/ITE412_SIA2_AniPalengke_Project.git
   cd ITE412_SIA2_AniPalengke_Project
