@@ -80,3 +80,31 @@ The agricultural sector faces significant challenges in connecting farmers direc
 - **Payment Integration**: Gcash for payment processing
 - **Notification Services**: SendGrid for email, Twilio for SMS
 - **File Storage**: AWS S3 or Azure Blob Storage for images and documents
+
+## 5. High-Level System Overview
+
+### 5.1 Major Modules/Subsystems
+- **Product Catalog & Order Management**  
+  Farmers can publish produce listings, manage inventory, and update prices. Buyers can browse items, add them to the cart, and complete purchases. The system tracks the full order lifecycle from creation to fulfillment.  
+
+- **Payment & Settlement System**  
+  Integrated with secure payment gateways (e.g., GCash, PayMaya) to handle transactions between buyers and farmers. Ensures traceable payouts, refund management, and transaction verification.  
+
+- **Admin & Analytics Dashboard**  
+  Administrators oversee user onboarding, identity verification, dispute management, and overall platform monitoring. Dashboards provide analytics, seasonal advisories, and farming tips to support decision-making.  
+
+---
+
+### 5.2 External Systems/Interfaces
+- **Payment Gateway APIs** – GCash, PayMaya for secure digital payments  
+- **Logistics Provider APIs** – Lalamove, GrabExpress for order shipment and delivery tracking  
+- **Notification Services** – SendGrid (email), Twilio (SMS), Firebase Cloud Messaging (in-app alerts)  
+- **Database & Storage** – Firebase (data storage), Redis (caching), AWS S3/Azure Blob Storage (images & documents)  
+- **Optional APIs** – OpenWeatherMap for weather updates, Department of Agriculture data for localized crop pricing  
+
+---
+
+### 5.3 Data Flow Summary
+1. **User Registration & Login** – Farmers, buyers, and admins register and authenticate through the system.  
+2. **Product Listing & Browsing** – Farmers add product details to the catalog, which buyers can search and view in real time.  
+3. **Order & Payment**
