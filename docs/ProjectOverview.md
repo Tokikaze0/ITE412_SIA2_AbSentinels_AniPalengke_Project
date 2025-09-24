@@ -108,3 +108,24 @@ The agricultural sector faces significant challenges in connecting farmers direc
 1. **User Registration & Login** – Farmers, buyers, and admins register and authenticate through the system.  
 2. **Product Listing & Browsing** – Farmers add product details to the catalog, which buyers can search and view in real time.  
 3. **Order & Payment**
+
+## 6. Integration Pattern Applied
+
+**Integration Pattern:** Publish–Subscribe (Pub–Sub)
+
+**Rationale:**  
+AniPalengke is both an **e-commerce platform** and a **farming advisory/community system**. Each part generates events that must be shared with multiple services:
+
+- When an **order is created**, the Notification Service informs farmers and buyers, the Logistics Service prepares delivery, and Analytics records sales data.  
+- When a **payment is confirmed**, buyers are notified, farmer balances are updated, and financial logs are recorded.  
+- When an **advisory post or farming tip is published**, other farmers are notified, Analytics tracks engagement, and admins may review content.  
+
+The **Pub–Sub pattern** supports this by:  
+- **Decoupling** producers (Order, Payment, Advisory services) from consumers (Notifications, Analytics, Logistics).  
+- **Scalability**, since many services can react to the same event independently.  
+- **Flexibility**, allowing new services (e.g., AI recommendations, government advisory agencies) to subscribe without changing existing modules.  
+- **Reliability**, because the broker queues events if a consumer is temporarily unavailable.  
+
+AniPalengke uses **REST APIs** for synchronous operations (login, profile updates, catalog browsing) and **Pub–Sub messaging** for asynchronous communication (orders, payments, advisory events). This ensures the platform is **responsive, resilient, and community-driven**.  
+
+**Diagram Reference:** `HighLevelArch.png`
