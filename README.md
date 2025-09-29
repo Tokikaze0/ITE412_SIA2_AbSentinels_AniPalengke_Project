@@ -6,7 +6,7 @@
 
 ## Team Members & Roles
 - Jan Russel Salazar — Project Leader 
-- Aerone John Grefalda — Documentation Lead  
+- Aerone John Grefalda — Documentation Leader  
 - Arwin Madeja — Diagrammer
 - Kenneth Inciong — Researcher  
 
