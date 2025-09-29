@@ -2,7 +2,7 @@
 
 **Course:** ITE412 – System Integration and Architecture 2  
 **Team Name:** AniPalengke Team  
-**Repository:** [link to repository]  
+**Repository:** https://github.com/Tokikaze0/ITE412_SIA2_AbSentinels_AniPalengke_Project.git  
 
 ## Team Members & Roles
 - Jan Russel Salazar — Project Leader 
