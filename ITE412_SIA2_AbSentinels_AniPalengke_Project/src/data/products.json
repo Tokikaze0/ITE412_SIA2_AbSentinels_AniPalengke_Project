@@ -1,0 +1,4 @@
+[
+  {"id": 1, "name": "Fresh Carrots", "price": 50, "stock": 100, "ownerId": 1},
+  {"id": 2, "name": "Organic Tomatoes", "price": 80, "stock": 60, "ownerId": 1}
+]

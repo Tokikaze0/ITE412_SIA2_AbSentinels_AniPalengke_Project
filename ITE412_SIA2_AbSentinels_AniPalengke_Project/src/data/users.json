@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "email": "farmer@example.com",
+    "password": "farmer123",
+    "role": "Farmer",
+    "name": "Farmer Foo"
+  },
+  {
+    "id": 2,
+    "email": "buyer@example.com",
+    "password": "buyer123",
+    "role": "Buyer",
+    "name": "Buyer Bar"
+  },
+  {
+    "id": 3,
+    "email": "admin@example.com",
+    "password": "admin123",
+    "role": "Admin",
+    "name": "Admin Baz"
+  }
+]
