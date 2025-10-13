@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Delivery Tracking · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="card">
+        <div class="card-header">Delivery Tracking</div>
+        <div class="card-body">
+          <div class="form-row">
+            <label class="label" for="orderId">Order ID</label>
+            <input class="input" id="orderId" placeholder="Enter order ID (e.g., ord_xxx)" />
+          </div>
+          <div class="spacer"></div>
+          <button class="btn btn-primary" id="track">Start/Resume Tracking</button>
+          <div class="spacer"></div>
+          <div id="status" class="muted">No delivery selected</div>
+          <div class="spacer"></div>
+          <div class="progress"><div id="bar"></div></div>
+          <div class="spacer"></div>
+          <div id="timeline"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/deliveries.js"></script>
+  <script>
+    AniP.requireAuth();
+    let currentTimer = null;
+    function render(delivery){
+      document.getElementById('status').textContent = `${delivery.status} (${delivery.progress}%)`;
+      document.getElementById('bar').style.width = delivery.progress + '%';
+      document.getElementById('timeline').innerHTML = delivery.timeline.map(t => `<div>• ${new Date(t.ts).toLocaleString()} — ${t.label}</div>`).join('');
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('track').addEventListener('click', () => {
+        const orderId = document.getElementById('orderId').value.trim();
+        if (!orderId) { AniP.showToast({ title: 'Missing order ID', type: 'error' }); return; }
+        let delivery = DeliveryStore.getDeliveries().find(d => d.orderId === orderId);
+        if (!delivery){
+          delivery = DeliveryStore.createDelivery(orderId);
+        }
+        render(delivery);
+        if (currentTimer) clearInterval(currentTimer);
+        currentTimer = DeliveryStore.simulateProgress(delivery.id, render);
+      });
+    });
+  </script>
+</body>
+</html>

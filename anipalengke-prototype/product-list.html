@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Products · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="card">
+        <div class="card-header">Marketplace Products</div>
+        <div class="card-body">
+          <div class="searchbar">
+            <input class="input" id="q" placeholder="Search by product or farmer..." />
+            <button class="btn btn-secondary" id="search">Search</button>
+          </div>
+          <div class="spacer"></div>
+          <div class="grid grid-3" id="products"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    function render(list){
+      const grid = document.getElementById('products');
+      const user = AniP.getCurrentUser();
+      grid.innerHTML = list.map(p => `
+        <article class="product-card">
+          <div class="card-media"><img src="${p.image}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;"/></div>
+          <div class="card-content">
+            <div class="card-title">${p.name}</div>
+            <div class="card-meta"><span>${AniP.formatCurrency(p.price)}</span><span>Stock: ${p.stock}</span></div>
+            <div class="muted">By ${p.farmer || 'Unknown farmer'}</div>
+          </div>
+          <div class="card-actions">
+            ${user?.role === 'buyer' ? `<button class="btn btn-primary" data-add="${p.id}">Add to Cart</button>` : ''}
+            ${user?.role === 'farmer' && user.id === p.farmerId ? `<button class="btn btn-secondary" data-edit="${p.id}">Edit</button><button class="btn btn-danger" data-del="${p.id}">Delete</button>` : ''}
+          </div>
+        </article>`).join('') || '<div class="empty">No products found</div>';
+
+      grid.querySelectorAll('[data-add]').forEach(btn => btn.addEventListener('click', () => {
+        if (!user) { location.href = 'login.html'; return; }
+        OrdersStore.addToCart(btn.getAttribute('data-add'), 1);
+        AniP.showToast({ title: 'Added to cart', message: 'Item added successfully' });
+      }));
+      grid.querySelectorAll('[data-del]').forEach(btn => btn.addEventListener('click', () => { ProductsStore.deleteProduct(btn.getAttribute('data-del')); refresh(); }));
+      grid.querySelectorAll('[data-edit]').forEach(btn => btn.addEventListener('click', () => openEdit(btn.getAttribute('data-edit'))));
+    }
+
+    function refresh(){
+      const q = document.getElementById('q').value.trim();
+      const list = q ? ProductsStore.searchProducts(q) : ProductsStore.getProducts();
+      render(list);
+    }
+
+    function openEdit(id){
+      const p = ProductsStore.getProducts().find(x => x.id === id);
+      if (!p) return;
+      const wrapper = document.createElement('div');
+      wrapper.innerHTML = `
+        <form id="product-form" class="form">
+          <div class="grid grid-2">
+            <div class="form-row"><label class="label">Name</label><input class="input" name="name" required value="${p.name}"/></div>
+            <div class="form-row"><label class="label">Price (PHP)</label><input class="input" name="price" type="number" min="0" required value="${p.price}"/></div>
+          </div>
+          <div class="grid grid-2">
+            <div class="form-row"><label class="label">Stock</label><input class="input" name="stock" type="number" min="0" required value="${p.stock}"/></div>
+            <div class="form-row"><label class="label">Image URL</label><input class="input" name="image" value="${p.image}"/></div>
+          </div>
+          <div class="modal-footer" style="padding:0; border-top:none;">
+            <button class="btn btn-secondary" type="button" id="cancel">Cancel</button>
+            <button class="btn btn-primary" type="submit">Update</button>
+          </div>
+        </form>`;
+      AniP.openModal({ title: 'Edit Product', content: wrapper });
+      wrapper.querySelector('#cancel').addEventListener('click', AniP.closeModal);
+      wrapper.querySelector('#product-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const data = Object.fromEntries(new FormData(e.currentTarget).entries());
+        ProductsStore.updateProduct(id, { ...data, price: Number(data.price), stock: Number(data.stock) });
+        AniP.closeModal();
+        AniP.showToast({ title: 'Product updated', message: data.name });
+        refresh();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('search').addEventListener('click', refresh);
+      document.getElementById('q').addEventListener('keydown', (e) => { if (e.key === 'Enter') refresh(); });
+      refresh();
+    });
+  </script>
+</body>
+</html>

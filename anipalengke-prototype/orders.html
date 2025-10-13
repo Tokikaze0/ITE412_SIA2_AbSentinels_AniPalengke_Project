@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Orders · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="card">
+        <div class="card-header">Orders</div>
+        <div class="card-body">
+          <table class="table">
+            <thead><tr><th>Order ID</th><th>Buyer</th><th>Items</th><th>Total</th><th>Status</th><th>Created</th></tr></thead>
+            <tbody id="order-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/orders.js"></script>
+  <script>
+    const user = AniP.requireAuth();
+    document.addEventListener('DOMContentLoaded', () => {
+      const orders = OrdersStore.getOrdersForUser(user);
+      const rows = orders.map(OrdersStore.formatOrderRow).join('');
+      document.getElementById('order-rows').innerHTML = rows || `<tr><td colspan="6" class="muted">No orders yet</td></tr>`;
+    });
+  </script>
+</body>
+</html>

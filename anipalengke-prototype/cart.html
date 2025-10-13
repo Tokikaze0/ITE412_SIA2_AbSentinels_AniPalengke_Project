@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cart · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="card">
+        <div class="card-header">Your Cart</div>
+        <div class="card-body">
+          <table class="table">
+            <thead><tr><th>Product</th><th>Price</th><th>Qty</th><th>Subtotal</th><th></th></tr></thead>
+            <tbody id="cart-rows"></tbody>
+          </table>
+          <div class="spacer"></div>
+          <div style="display:flex; justify-content:flex-end; gap:12px; align-items:center;">
+            <strong>Total: <span id="total">₱0</span></strong>
+            <button class="btn btn-primary" id="checkout">Checkout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/deliveries.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    const user = AniP.requireRole('buyer');
+    function render(){
+      const products = ProductsStore.getProducts();
+      const items = OrdersStore.getCart(user.id);
+      let total = 0;
+      const rows = items.map(it => {
+        const p = products.find(pp => pp.id === it.productId);
+        const sub = (p?.price || 0) * it.quantity;
+        total += sub;
+        return `<tr>
+          <td>${p?.name || 'Unknown'}</td>
+          <td>${AniP.formatCurrency(p?.price || 0)}</td>
+          <td>${it.quantity}</td>
+          <td>${AniP.formatCurrency(sub)}</td>
+          <td><button class="btn btn-secondary" data-remove="${it.productId}">Remove</button></td>
+        </tr>`;
+      }).join('');
+      document.getElementById('cart-rows').innerHTML = rows || `<tr><td colspan="5" class="muted">Your cart is empty</td></tr>`;
+      document.getElementById('total').textContent = AniP.formatCurrency(total);
+      document.querySelectorAll('[data-remove]').forEach(btn => btn.addEventListener('click', () => { OrdersStore.removeFromCart(btn.getAttribute('data-remove')); render(); }));
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      render();
+      document.getElementById('checkout').addEventListener('click', () => {
+        try {
+          const order = OrdersStore.checkout();
+          const d = DeliveryStore.createDelivery(order.id);
+          Notifications.notify({ title: 'Payment success', message: `Order ${order.id} paid`, type: 'success', userId: user.id });
+          Notifications.notify({ title: 'New order', message: `${user.name} placed an order`, type: 'info', role: 'farmer' });
+          AniP.showToast({ title: 'Order placed', message: `Order ${order.id} created` });
+          location.href = 'orders.html';
+        } catch(err){
+          AniP.showToast({ title: 'Checkout failed', message: err.message || 'Please try again', type: 'error' });
+        }
+      });
+    });
+  </script>
+</body>
+</html>

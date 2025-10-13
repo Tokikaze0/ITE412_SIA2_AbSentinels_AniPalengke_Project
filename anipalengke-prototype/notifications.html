@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Notifications · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="card">
+        <div class="card-header">Notifications</div>
+        <div class="card-body">
+          <div class="actions">
+            <button class="btn btn-secondary" id="seed">Seed demo alerts</button>
+            <button class="btn btn-primary" id="broadcast">Broadcast to all</button>
+          </div>
+          <div class="spacer"></div>
+          <table class="table">
+            <thead><tr><th>ID</th><th>Title</th><th>Message</th><th>Role</th><th>UserId</th><th>Created</th></tr></thead>
+            <tbody id="notif-rows"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    const user = AniP.requireAuth();
+    function refresh(){
+      const isAdmin = user.role === 'admin';
+      Notifications.renderNotificationsTable('#notif-rows', user, isAdmin);
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('seed').addEventListener('click', () => {
+        Notifications.notify({ title: 'New order', message: 'Buyer placed an order', type: 'info', role: 'farmer' });
+        Notifications.notify({ title: 'Payment success', message: 'Order payment confirmed', type: 'success' });
+        Notifications.notify({ title: 'New post', message: 'Community has a new advisory', type: 'info' });
+        refresh();
+      });
+      document.getElementById('broadcast').addEventListener('click', () => {
+        Notifications.notify({ title: 'Market update', message: 'Corn prices rising this week', type: 'info' });
+        refresh();
+      });
+      refresh();
+    });
+  </script>
+</body>
+</html>

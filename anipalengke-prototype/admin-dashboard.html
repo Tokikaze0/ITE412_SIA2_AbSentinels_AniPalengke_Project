@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Admin Dashboard · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/dashboard.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="section">
+        <h2>Admin Dashboard</h2>
+        <div class="dashboard-grid">
+          <div class="kpi-card"><div class="kpi-title">Total products</div><div class="kpi-value" id="kpi-products">0</div></div>
+          <div class="kpi-card"><div class="kpi-title">Total orders</div><div class="kpi-value" id="kpi-orders">0</div></div>
+          <div class="kpi-card"><div class="kpi-title">Community posts</div><div class="kpi-value" id="kpi-posts">0</div></div>
+        </div>
+      </div>
+      <div class="section card">
+        <div class="card-header">Reports quick view</div>
+        <div class="card-body">
+          <table class="table">
+            <thead><tr><th>ID</th><th>Title</th><th>Message</th><th>Role</th><th>UserId</th><th>Created</th></tr></thead>
+            <tbody id="notif-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/products.js"></script>
+  <script src="js/orders.js"></script>
+  <script src="js/community.js"></script>
+  <script src="js/notifications.js"></script>
+  <script>
+    const { requireRole } = AniP;
+    requireRole('admin');
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('kpi-products').textContent = ProductsStore.getProducts().length;
+      document.getElementById('kpi-orders').textContent = OrdersStore.getOrders().length;
+      document.getElementById('kpi-posts').textContent = Community.getPosts().length;
+      Notifications.renderNotificationsTable('#notif-table', AniP.getCurrentUser(), true);
+    });
+  </script>
+</body>
+</html>

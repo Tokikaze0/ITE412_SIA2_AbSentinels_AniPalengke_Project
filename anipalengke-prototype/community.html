@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Community · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container">
+      <div class="actions" style="justify-content: space-between; align-items:center;">
+        <h2>Advisory & Community</h2>
+        <a class="btn btn-primary" href="create-post.html">Create Post</a>
+      </div>
+      <div class="spacer"></div>
+      <div class="grid grid-2" id="feed"></div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/community.js"></script>
+  <script>
+    AniP.requireAuth();
+    document.addEventListener('DOMContentLoaded', () => Community.renderFeed('#feed'));
+  </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container" style="max-width:520px;">
+      <div class="card">
+        <div class="card-header">Login to AniPalengke</div>
+        <div class="card-body">
+          <form id="login-form" class="form">
+            <div class="form-row">
+              <label class="label" for="email">Email</label>
+              <input class="input" type="email" id="email" name="email" required placeholder="you@example.com" />
+            </div>
+            <div class="form-row">
+              <label class="label" for="password">Password</label>
+              <input class="input" type="password" id="password" name="password" required />
+            </div>
+            <button class="btn btn-primary" type="submit">Login</button>
+            <div class="muted">No account? <a href="register.html">Register</a></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>

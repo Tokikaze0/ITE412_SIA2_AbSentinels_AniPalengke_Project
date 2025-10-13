@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Create Post · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container" style="max-width:720px;">
+      <div class="card">
+        <div class="card-header">Create Advisory Post</div>
+        <div class="card-body">
+          <form id="post-form" class="form">
+            <div class="form-row">
+              <label class="label" for="content">Content</label>
+              <textarea class="textarea" id="content" name="content" placeholder="Share best practices, tips, and updates..." required></textarea>
+            </div>
+            <button class="btn btn-primary" type="submit">Publish</button>
+            <a class="btn btn-secondary" href="community.html" type="button">Cancel</a>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/notifications.js"></script>
+  <script src="js/community.js"></script>
+  <script>
+    AniP.requireAuth();
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('post-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const content = document.getElementById('content').value.trim();
+        if (!content) return;
+        Community.addPost({ content });
+        AniP.showToast({ title: 'Post published', message: 'Your advisory is live' });
+        location.href = 'community.html';
+      });
+    });
+  </script>
+</body>
+</html>

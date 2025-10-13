@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Register · AniPalengke</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="site-header"></header>
+  <main class="main">
+    <div class="container" style="max-width:640px;">
+      <div class="card">
+        <div class="card-header">Create your account</div>
+        <div class="card-body">
+          <form id="register-form" class="form">
+            <div class="grid grid-2">
+              <div class="form-row">
+                <label class="label" for="name">Full name</label>
+                <input class="input" type="text" id="name" name="name" required />
+              </div>
+              <div class="form-row">
+                <label class="label" for="role">Role</label>
+                <select class="select" id="role" name="role" required>
+                  <option value="farmer">Farmer</option>
+                  <option value="buyer">Buyer</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <label class="label" for="email">Email</label>
+              <input class="input" type="email" id="email" name="email" required />
+            </div>
+            <div class="form-row">
+              <label class="label" for="password">Password</label>
+              <input class="input" type="password" id="password" name="password" required />
+            </div>
+            <button class="btn btn-primary" type="submit">Create Account</button>
+            <div class="muted">Already have an account? <a href="login.html">Login</a></div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </main>
+  <script src="js/main.js"></script>
+  <script src="js/users.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
