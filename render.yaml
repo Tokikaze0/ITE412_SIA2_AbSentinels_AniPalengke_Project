@@ -2,15 +2,13 @@ services:
   - type: web
     name: anipalengke
     env: python
-    region: singapore
-    plan: free
-    buildCommand: pip install -r src/code/requirements.txt
-    startCommand: cd src/code && python manage.py runserver 0.0.0.0:$PORT
+    buildCommand: "pip install -r src/code/requirements.txt"
+    startCommand: "cd src/code && python manage.py runserver 0.0.0.0:$PORT"
     envVars:
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.11.0"
       - key: SECRET_KEY
         generateValue: true
     secretFiles:
-      - name: serviceAccountKey.json
+      - key: serviceAccountKey.json
         mountPath: /etc/secrets/serviceAccountKey.json
