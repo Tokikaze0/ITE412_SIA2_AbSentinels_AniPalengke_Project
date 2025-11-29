@@ -1,0 +1,57 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Create Post · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 700px; padding-top: 2rem;">
+    <a href="{% url 'community_feed' %}" class="btn btn-ghost" style="margin-bottom: 1rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Back to Community
+    </a>
+
+    <div class="card">
+        <div class="card-header" style="border-bottom: 1px solid var(--gray-200); padding: 1.5rem;">
+            <h2 style="margin: 0; font-size: 1.5rem; color: var(--gray-900);">Create New Post</h2>
+            <p class="muted" style="margin: 0.5rem 0 0;">Share your thoughts, ask questions, or start a discussion.</p>
+        </div>
+        
+        <div class="card-body" style="padding: 2rem;">
+            <form method="post">
+                {% csrf_token %}
+                
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="title" class="label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Title</label>
+                    <input type="text" id="title" name="title" class="input" placeholder="What's on your mind?" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius-sm);">
+                </div>
+
+                {% if user.role == 'admin' %}
+                <div class="form-group" style="margin-bottom: 1.5rem;">
+                    <label for="post_type" class="label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Post Type</label>
+                    <div class="select-wrapper" style="position: relative;">
+                        <select id="post_type" name="post_type" class="select" style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); appearance: none; background-color: white;">
+                            <option value="discussion">Discussion</option>
+                            <option value="announcement">Announcement</option>
+                        </select>
+                        <div style="position: absolute; right: 1rem; top: 50%; transform: translateY(-50%); pointer-events: none;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+                        </div>
+                    </div>
+                    <small class="muted" style="display: block; margin-top: 0.5rem;">Choose "Announcement" for official updates.</small>
+                </div>
+                {% endif %}
+
+                <div class="form-group" style="margin-bottom: 2rem;">
+                    <label for="content" class="label" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Content</label>
+                    <textarea id="content" name="content" class="input" rows="8" placeholder="Write your post content here..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--gray-200); border-radius: var(--radius-sm); resize: vertical; font-family: inherit;"></textarea>
+                    <small class="muted" style="display: block; margin-top: 0.5rem;">Be respectful and follow community guidelines.</small>
+                </div>
+
+                <div class="form-actions" style="display: flex; gap: 1rem; align-items: center;">
+                    <button type="submit" class="btn btn-primary" style="padding: 0.75rem 1.5rem; font-weight: 600;">Publish Post</button>
+                    <a href="{% url 'community_feed' %}" class="btn btn-ghost" style="color: var(--gray-500);">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

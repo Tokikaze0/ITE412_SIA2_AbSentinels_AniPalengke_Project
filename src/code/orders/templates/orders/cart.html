@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Cart · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="card">
+    <div class="card-header">Your Cart</div>
+    <div class="card-body">
+      <table class="table">
+        <thead><tr><th>Product</th><th>Price (PHP/kg)</th><th>Qty (kg)</th><th>Subtotal</th><th></th></tr></thead>
+        <tbody id="cart-rows">
+            {% for item in cart_items %}
+            <tr>
+                <td>{{ item.product_name }}</td>
+                <td>₱{{ item.price }}/kg</td>
+                <td>
+                  <form action="{% url 'update_cart' item.product_id %}" method="post" style="display:flex; align-items:center; gap:5px;">
+                      {% csrf_token %}
+                                                          <input type="number" name="quantity" value="{{ item.quantity }}" min="0.5" step="0.5" class="form-control d-inline-block" style="width: 80px;" onchange="this.value = (Math.round(this.value * 2) / 2).toFixed(1)">
+                      <button type="submit" class="btn btn-sm btn-ghost" title="Update Quantity">↻</button>
+                  </form>
+                </td>
+                <td>₱{{ item.subtotal }}</td>
+                <td>
+                  <form action="{% url 'remove_from_cart' item.product_id %}" method="post">
+                      {% csrf_token %}
+                      <button class="btn btn-secondary" type="submit">Remove</button>
+                  </form>
+                </td>
+              </tr>
+            {% empty %}
+            <tr><td colspan="5" class="muted">Your cart is empty</td></tr>
+            {% endfor %}
+        </tbody>
+      </table>
+      <div class="spacer"></div>
+      
+      <!-- Vouchers Section -->
+      <div style="background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.2rem;">🎟️</span>
+          {% if voucher_code %}
+            <span style="color: var(--green-700); font-weight: bold;">Applied: {{ voucher_code }}</span>
+            <form action="{% url 'remove_voucher' %}" method="post" style="display:inline;">
+                {% csrf_token %}
+                <button class="btn btn-secondary btn-sm" style="color: #d32f2f;">Remove</button>
+            </form>
+          {% else %}
+            <form action="{% url 'apply_voucher' %}" method="post" style="display:flex; gap:10px; align-items:center;">
+                {% csrf_token %}
+                <input type="text" name="voucher_code" class="input" placeholder="Enter Voucher Code" style="max-width: 200px;" required>
+                <button class="btn btn-secondary">Apply</button>
+            </form>
+          {% endif %}
+          <span class="muted" style="font-size: 0.9rem; margin-left: auto;">Available Vouchers: <strong>WELCOME10</strong>, <strong>FREESHIP</strong></span>
+      </div>
+
+      <div style="display:flex; flex-direction: column; align-items: flex-end; gap: 5px;">
+        <div style="font-size: 1.1rem;">Subtotal: ₱{{ total|floatformat:2 }}</div>
+        {% if discount > 0 %}
+        <div style="font-size: 1.1rem; color: var(--green-600);">Discount: -₱{{ discount|floatformat:2 }}</div>
+        {% endif %}
+        <div style="font-size: 1.5rem; font-weight: bold;">Total: <span id="total">₱{{ final_total|floatformat:2 }}</span></div>
+        <div class="spacer"></div>
+        <a class="btn btn-primary" href="{% url 'checkout' %}">Checkout</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

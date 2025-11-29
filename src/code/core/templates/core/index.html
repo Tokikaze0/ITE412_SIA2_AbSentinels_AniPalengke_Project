@@ -1,0 +1,156 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block title %}AniPalengke – Farmer-to-Buyer Marketplace{% endblock %}
+
+{% block content %}
+<div class="container">
+  <!-- Hero Section -->
+  <section class="hero-section">
+    <div class="grid grid-2" style="align-items: center;">
+      <div class="hero-content">
+        <h1>Fresh from the Farm, Straight to Your Table</h1>
+        <p>AniPalengke connects local farmers directly with buyers. Enjoy fresh produce, fair prices, and smart agricultural advice.</p>
+        <div class="cta">
+          {% if not user.is_authenticated %}
+          <a class="spaces">ㅤ<a/a>
+          <a class="btn btn-primary" href="{% url 'register' %}">Join Now</a>
+          <a class="spaces">ㅤ<a/a>
+          <a class="btn btn-secondary" href="{% url 'login' %}">Login</a>
+          {% else %}
+          <a class="btn btn-primary" href="{% url 'product_list' %}">Start Shopping</a>
+          {% endif %}
+        </div>
+      </div>
+      <div style="text-align: center;">
+        <!-- Hero Image -->
+        <img src="{% static 'images/logo.png' %}" alt="AniPalengke Logo" style="max-width: 350px; width: 100%; height: auto; border-radius: 24px; box-shadow: var(--shadow-md);">
+      </div>
+    </div>
+  </section>
+
+  <!-- Flash Sales Section -->
+  <section class="section" style="background: #fff0f0; padding: 30px; border-radius: 12px; border: 1px solid #ffcccc;">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+          <h2 style="color: #d32f2f; margin: 0;">⚡ Flash Sales</h2>
+          <span style="background: #d32f2f; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: bold;">Ending Soon</span>
+      </div>
+      <div id="countdown" style="font-family: monospace; font-size: 1.2rem; font-weight: bold; color: #d32f2f;">02:14:59</div>
+    </div>
+    <div class="grid grid-4">
+      <!-- Mock Flash Sale Items -->
+      <article class="product-card">
+        <div class="card-media">
+            <div style="position: absolute; top: 10px; left: 10px; background: #d32f2f; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">-30%</div>
+            <div style="width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center;">🍅</div>
+        </div>
+        <div class="card-content">
+          <div class="card-title">Organic Tomatoes</div>
+          <div class="card-meta">
+            <span style="color: #d32f2f; font-weight: bold;">₱35/kg</span>
+            <span style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₱50</span>
+          </div>
+          <div class="muted" style="font-size: 0.8rem; margin-top: 5px;">🔥 85% Sold</div>
+          <div style="width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 5px; overflow: hidden;">
+              <div style="width: 85%; height: 100%; background: #d32f2f;"></div>
+          </div>
+        </div>
+      </article>
+      
+      <article class="product-card">
+        <div class="card-media">
+            <div style="position: absolute; top: 10px; left: 10px; background: #d32f2f; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.8rem;">-20%</div>
+            <div style="width: 100%; height: 100%; background: #eee; display: flex; align-items: center; justify-content: center;">🍆</div>
+        </div>
+        <div class="card-content">
+          <div class="card-title">Fresh Eggplant</div>
+          <div class="card-meta">
+            <span style="color: #d32f2f; font-weight: bold;">₱32/kg</span>
+            <span style="text-decoration: line-through; color: #999; font-size: 0.9rem;">₱40</span>
+          </div>
+          <div class="muted" style="font-size: 0.8rem; margin-top: 5px;">🔥 40% Sold</div>
+          <div style="width: 100%; height: 6px; background: #eee; border-radius: 3px; margin-top: 5px; overflow: hidden;">
+              <div style="width: 40%; height: 100%; background: #d32f2f;"></div>
+          </div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <!-- Value Proposition -->
+  <section class="section">
+    <div class="section-header">
+      <h2>Why Choose AniPalengke?</h2>
+      <p class="muted">Empowering farmers, satisfying buyers.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="feature-card">
+        <div class="feature-icon">🥬</div>
+        <h3>Fresh & Local</h3>
+        <p class="muted">Get produce harvested directly from local farms. No middlemen, just freshness.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤝</div>
+        <h3>Fair Trade</h3>
+        <p class="muted">Farmers get better prices, and buyers get better value. It's a win-win.</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h3>Smart Advisory</h3>
+        <p class="muted">Access community-driven agricultural advice and farming tips.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Products -->
+  {% if featured_products %}
+  <section class="section">
+    <div class="section-header">
+      <h2>Featured Products</h2>
+      <a href="{% url 'product_list' %}" style="color: var(--green-600); text-decoration: none;">View All &rarr;</a>
+    </div>
+    <div class="grid grid-4">
+      {% for product in featured_products %}
+      <article class="product-card">
+        <div class="card-media">
+            {% if product.image %}
+            <img src="{{ product.image }}" alt="{{ product.name }}" style="width:100%;height:100%;object-fit:cover;"/>
+            {% else %}
+            No Image
+            {% endif %}
+        </div>
+        <div class="card-content">
+          <div class="card-title">{{ product.name }}</div>
+          <div class="card-meta">
+            <span>₱{{ product.price }}/kg</span>
+            <span>{{ product.location }}</span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+  {% endif %}
+
+  <!-- Join Us Section -->
+  <section class="section" style="margin-top: 60px; margin-bottom: 60px;">
+    <div class="section-header">
+      <h2>Join Our Community</h2>
+      <p class="muted">Choose how you want to participate in the marketplace.</p>
+    </div>
+    <div class="grid grid-2" style="max-width: 800px; margin: 0 auto;">
+      <a href="{% url 'register' %}" class="role-card">
+        <div style="font-size: 3rem; margin-bottom: 10px;">👨‍🌾</div>
+        <h3>Become a Farmer</h3>
+        <p class="muted">List your crops, manage inventory, and reach more buyers.</p>
+      </a>
+      <a href="{% url 'register' %}" class="role-card">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🛒</div>
+        <h3>Become a Buyer</h3>
+        <p class="muted">Shop for fresh ingredients and support local agriculture.</p>
+      </a>
+    </div>
+  </section>
+</div>
+{% endblock %}

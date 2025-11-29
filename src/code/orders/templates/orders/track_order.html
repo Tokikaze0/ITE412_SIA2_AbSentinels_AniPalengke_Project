@@ -1,0 +1,114 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Track Order · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header">
+        <a href="{% url 'order_history' %}" class="btn btn-ghost" style="margin-bottom: 1rem;">&larr; Back to Orders</a>
+        <h2>Track Order</h2>
+        <p class="muted">Tracking Number: {{ order.tracking_number }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div>
+                    <h3 style="margin: 0;">{{ order.courier }}</h3>
+                    <p class="muted">Estimated Delivery: 3-5 Days</p>
+                </div>
+                <div class="badge" style="font-size: 1rem; background: #eef2ff; color: #4f46e5;">
+                    {{ order.status }}
+                </div>
+            </div>
+
+            <div class="timeline">
+                <!-- Mock Timeline -->
+                <div class="timeline-item">
+                    <div class="timeline-marker active"></div>
+                    <div class="timeline-content">
+                        <h4>Order Placed</h4>
+                        <p class="muted">{{ order.created_at|date:"F j, Y, g:i a" }}</p>
+                        <p>Your order has been received and is being processed.</p>
+                    </div>
+                </div>
+                
+                <div class="timeline-item">
+                    <div class="timeline-marker {% if order.status != 'Pending' %}active{% endif %}"></div>
+                    <div class="timeline-content">
+                        <h4>Packed & Ready to Ship</h4>
+                        <p class="muted">{% if order.status != 'Pending' %}Today, 10:00 AM{% else %}Pending{% endif %}</p>
+                        <p>Seller has packed your items.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>In Transit</h4>
+                        <p class="muted">Pending</p>
+                        <p>Package is on the way to the logistics hub.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>Out for Delivery</h4>
+                        <p class="muted">Pending</p>
+                        <p>Rider is on the way to your address.</p>
+                    </div>
+                </div>
+
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="timeline-content">
+                        <h4>Delivered</h4>
+                        <p class="muted">Pending</p>
+                        <p>Package has been delivered.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .timeline {
+        position: relative;
+        padding-left: 30px;
+    }
+    .timeline::before {
+        content: '';
+        position: absolute;
+        left: 7px;
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background: #eee;
+    }
+    .timeline-item {
+        position: relative;
+        margin-bottom: 30px;
+    }
+    .timeline-marker {
+        position: absolute;
+        left: -30px;
+        top: 5px;
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #ddd;
+        border: 3px solid #fff;
+        box-shadow: 0 0 0 1px #ddd;
+    }
+    .timeline-marker.active {
+        background: #2ecc71;
+        box-shadow: 0 0 0 1px #2ecc71;
+    }
+    .timeline-content h4 {
+        margin: 0 0 5px 0;
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}

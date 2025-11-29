@@ -1,0 +1,39 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Community · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <div>
+            <h2>Community Forum</h2>
+            <p class="muted">Connect with other farmers and buyers.</p>
+        </div>
+        <a href="{% url 'create_post' %}" class="btn btn-primary">Create Post</a>
+    </div>
+
+    <div class="grid">
+        {% for post in posts %}
+        <div class="card" style="{% if post.post_type == 'announcement' %}border-left: 4px solid var(--primary-color); background-color: #f0fdf4;{% endif %}">
+            <div class="card-body">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <span class="badge badge-{{ post.post_type }}">{{ post.post_type|title }}</span>
+                    <small class="muted">{{ post.created_at|date:"M d, Y" }}</small>
+                </div>
+                <h3 style="margin-top: 0;"><a href="{% url 'post_detail' post.id %}" style="text-decoration: none; color: inherit;">{{ post.title }}</a></h3>
+                <p class="muted">Posted by {{ post.author_name }}</p>
+                <p>{{ post.content|truncatewords:30 }}</p>
+                <div style="margin-top: 10px;">
+                    <a href="{% url 'post_detail' post.id %}" class="btn btn-ghost btn-sm">View Discussion ({{ post.comments|length }})</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="card card-body" style="text-align: center; padding: 40px;">
+            <h3>No posts yet</h3>
+            <p class="muted">Be the first to start a discussion!</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

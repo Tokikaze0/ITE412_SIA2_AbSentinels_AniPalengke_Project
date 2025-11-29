@@ -1,0 +1,34 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container" style="max-width: 500px; margin-top: 50px;">
+    <div class="card shadow">
+        <div class="card-body">
+            <h3 class="text-center mb-4">Verify Your Email</h3>
+            <p class="text-center text-muted">
+                We've sent a verification code to <strong>{{ email }}</strong>. 
+                Please enter the code below to continue.
+            </p>
+            
+            <form method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="otp" class="form-label">Verification Code</label>
+                    <input type="text" class="form-control text-center" id="otp" name="otp" 
+                           placeholder="Enter 6-digit code" maxlength="6" required 
+                           style="font-size: 1.5rem; letter-spacing: 0.5rem;">
+                </div>
+                
+                {% if error %}
+                <div class="alert alert-danger">{{ error }}</div>
+                {% endif %}
+                
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Verify</button>
+                    <a href="{{ cancel_url|default:'/login/' }}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

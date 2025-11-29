@@ -1,0 +1,126 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}AniPalengke{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/style.css' %}" />
+  <link rel="stylesheet" href="{% static 'css/components.css' %}" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  {% block extra_css %}{% endblock %}
+</head>
+<body>
+  <header class="site-header">
+      <div class="container">
+        <nav class="navbar">
+            <a href="{% if user.is_authenticated %}{% url 'dashboard' %}{% else %}{% url 'index' %}{% endif %}" class="brand">
+                <img src="{% static 'images/logo.png' %}" alt="AniPalengke Logo">
+                AniPalengke
+            </a>
+            
+            <button class="mobile-menu-btn" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+            <div class="nav-links {% if not user.is_authenticated %}guest-nav{% endif %}" id="navLinks">
+                {% if user.is_authenticated %}
+                    {% if user.profile.role == 'farmer' %}
+                        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-gauge"></i> Dashboard
+                        </a>
+                    {% elif user.profile.role == 'buyer' %}
+                        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-gauge"></i> Dashboard
+                        </a>
+                    {% elif user.profile.role == 'admin' %}
+                        <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            <i class="fa-solid fa-gauge"></i> Dashboard
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+                        <i class="fa-solid fa-store"></i> Products
+                    </a>
+                    <a href="{% url 'community_feed' %}" class="{% if request.resolver_match.url_name == 'community_feed' %}active{% endif %}">
+                        <i class="fa-solid fa-users"></i> Community
+                    </a>
+                    <a href="{% url 'inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}">
+                        <i class="fa-solid fa-envelope"></i> Messages
+                    </a>
+                    <a href="{% url 'knowledge_base' %}" class="{% if request.resolver_match.url_name == 'knowledge_base' %}active{% endif %}">
+                        <i class="fa-solid fa-book-open"></i> Learn
+                    </a>
+                    
+                    {% if user.profile.role != 'admin' %}
+                        <a href="{% url 'order_history' %}" class="{% if request.resolver_match.url_name == 'order_history' %}active{% endif %}">
+                            <i class="fa-solid fa-box"></i> Orders
+                        </a>
+                        <a href="{% url 'cart' %}" class="{% if request.resolver_match.url_name == 'cart' %}active{% endif %}">
+                            <i class="fa-solid fa-shopping-cart"></i> Cart
+                        </a>
+                    {% endif %}
+                    
+                    <a href="{% url 'profile_settings' %}" class="{% if request.resolver_match.url_name == 'profile_settings' %}active{% endif %}">
+                        <i class="fa-solid fa-gear"></i> Settings
+                    </a>
+                    <form action="{% url 'logout' %}" method="post" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-danger" style="padding: 8px 12px;">
+                            <i class="fa-solid fa-right-from-bracket"></i> Logout
+                        </button>
+                    </form>
+                {% else %}
+                    <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">
+                        <i class="fa-solid fa-store"></i> Products
+                    </a>
+                    <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                    </a>
+                    <a href="{% url 'register' %}" class="{% if request.resolver_match.url_name == 'register' %}active{% endif %}">
+                        <i class="fa-solid fa-user-plus"></i> Register
+                    </a>
+                {% endif %}
+            </div>
+        </nav>
+      </div>
+  </header>
+  
+  <main class="main">
+    {% if messages %}
+    <div id="toast-root">
+        {% for message in messages %}
+        <div class="toast {% if message.tags %}{{ message.tags }}{% endif %}">
+            <div class="title">Notification</div>
+            <div>{{ message }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    {% block content %}{% endblock %}
+  </main>
+
+  {% if user.is_authenticated %}
+  <a href="{% url 'ai_assistant' %}" class="floating-chat-btn" title="Smart Assistant">
+      <i class="fa-solid fa-robot"></i>
+  </a>
+  {% endif %}
+
+  {% block extra_js %}{% endblock %}
+  
+  <script>
+    const mobileBtn = document.querySelector('.mobile-menu-btn');
+    const navLinks = document.getElementById('navLinks');
+
+    if(mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+            mobileBtn.classList.toggle('active');
+        });
+    }
+  </script>
+</body>
+</html>

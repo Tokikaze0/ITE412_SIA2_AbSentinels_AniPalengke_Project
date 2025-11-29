@@ -1,0 +1,167 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Farmer Dashboard{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Welcome, {{ user.name }}</h1>
+    <h2>Farmer Dashboard</h2>
+
+    {% if notifications %}
+    <div class="section" style="margin-bottom: 30px;">
+        <h3>Notifications</h3>
+        <div class="card" style="border-left: 4px solid var(--red-500);">
+            {% for notif in notifications %}
+            <div class="card-body" style="border-bottom: 1px solid var(--gray-200); padding: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <p style="margin: 0; color: var(--gray-900); font-weight: 500;">{{ notif.message }}</p>
+                    <small class="muted">{{ notif.created_at|date:"M d, Y" }}</small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="dashboard-grid">
+        <div class="kpi-card">
+            <div class="kpi-title">Total Sales</div>
+            <div class="kpi-value">₱{{ stats.total_sales|floatformat:2 }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Products Listed</div>
+            <div class="kpi-value">{{ stats.total_products }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Total Orders</div>
+            <div class="kpi-value">{{ stats.total_orders }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Low Stock Items</div>
+            <div class="kpi-value" style="color: {% if stats.low_stock > 0 %}red{% else %}inherit{% endif %};">{{ stats.low_stock }}</div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="card card-body" style="margin-top: 30px;">
+        <h3 class="mb-3">Product Stock Levels</h3>
+        <canvas id="stockChart" style="max-height: 400px;"></canvas>
+    </div>
+
+    <div class="section">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3>My Products</h3>
+            <a href="{% url 'add_product' %}" class="btn btn-primary">Add Product</a>
+        </div>
+        
+        <!-- Product Status Tabs/Sections -->
+        <div class="grid grid-3" style="margin-top: 20px;">
+            <!-- Rejected Products -->
+            <div class="card">
+                <div class="card-header" style="background-color: var(--red-100); color: var(--red-700);">
+                    <h4>Rejected Products</h4>
+                </div>
+                <div class="card-body">
+                    {% if stats.rejected_products %}
+                        <ul style="list-style: none; padding: 0;">
+                        {% for product in stats.rejected_products %}
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                                <strong>{{ product.name }}</strong>
+                                <div class="muted" style="font-size: 0.85rem;">Rejected</div>
+                                <div style="margin-top: 5px;">
+                                    <a href="{% url 'edit_product' product.id %}" class="btn btn-sm btn-secondary">Edit & Resubmit</a>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted">No rejected products.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Expired Products -->
+            <div class="card">
+                <div class="card-header" style="background-color: var(--yellow-100); color: var(--yellow-700);">
+                    <h4>Expired Products</h4>
+                </div>
+                <div class="card-body">
+                    {% if stats.expired_products %}
+                        <ul style="list-style: none; padding: 0;">
+                        {% for product in stats.expired_products %}
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                                <strong>{{ product.name }}</strong>
+                                <div class="muted" style="font-size: 0.85rem;">Expired on {{ product.expiration_date }}</div>
+                                <div style="margin-top: 5px;">
+                                    <a href="{% url 'delete_product' product.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Delete expired product?')">Remove</a>
+                                </div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted">No expired products.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Pending Products -->
+            <div class="card">
+                <div class="card-header" style="background-color: var(--blue-100); color: var(--blue-700);">
+                    <h4>Pending Approval</h4>
+                </div>
+                <div class="card-body">
+                    {% if stats.pending_products %}
+                        <ul style="list-style: none; padding: 0;">
+                        {% for product in stats.pending_products %}
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--gray-200);">
+                                <strong>{{ product.name }}</strong>
+                                <div class="muted" style="font-size: 0.85rem;">Waiting for admin...</div>
+                            </li>
+                        {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="muted">No pending products.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+<script>
+    const ctx = document.getElementById('stockChart').getContext('2d');
+    
+    // Prepare data from Django context
+    const productNames = {{ stats.product_names|safe }};
+    const productStocks = {{ stats.product_stocks|safe }};
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: productNames,
+            datasets: [{
+                label: 'Stock Level',
+                data: productStocks,
+                backgroundColor: '#2ecc71',
+                borderColor: '#27ae60',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: 'Quantity'
+                    }
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

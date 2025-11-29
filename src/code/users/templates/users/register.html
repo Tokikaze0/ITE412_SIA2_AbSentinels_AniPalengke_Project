@@ -1,0 +1,73 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Register · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:640px;">
+  <div class="card">
+    <div class="card-header">Create your account</div>
+    <div class="card-body">
+      <form method="post" class="form">
+        {% csrf_token %}
+        <div class="grid grid-2">
+          <div class="form-row">
+            <label class="label" for="name">Full Name</label>
+            <input class="input" type="text" id="name" name="name" required placeholder="e.g. Juan Dela Cruz" />
+          </div>
+          <div class="form-row">
+            <label class="label" for="username">Username</label>
+            <input class="input" type="text" id="username" name="username" required />
+          </div>
+          <div class="form-row">
+            <label class="label" for="role">Role</label>
+            <select class="select" id="role" name="role" required onchange="toggleLocationField()">
+              <option value="farmer">Farmer</option>
+              <option value="buyer">Buyer</option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row" id="location-field">
+            <label class="label" for="location">Farm Location</label>
+            <input class="input" type="text" id="location" name="location" placeholder="e.g. Bulacan, Pampanga" />
+        </div>
+
+        <div class="form-row">
+          <label class="label" for="email">Email</label>
+          <input class="input" type="email" id="email" name="email" required />
+        </div>
+        <div class="form-row">
+          <label class="label" for="password">Password</label>
+          <input class="input" type="password" id="password" name="password" required />
+        </div>
+        <div class="form-row">
+            <label class="label" for="confirm_password">Confirm Password</label>
+            <input class="input" type="password" id="confirm_password" name="confirm_password" required />
+          </div>
+        <button class="btn btn-primary" type="submit">Create Account</button>
+        <div class="muted">Already have an account? <a href="{% url 'login' %}">Login</a></div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleLocationField() {
+    const role = document.getElementById('role').value;
+    const locationField = document.getElementById('location-field');
+    const locationInput = document.getElementById('location');
+    
+    if (role === 'farmer') {
+        locationField.style.display = 'block';
+        locationInput.required = true;
+    } else {
+        locationField.style.display = 'none';
+        locationInput.required = false;
+        locationInput.value = '';
+    }
+}
+
+// Run on load
+document.addEventListener('DOMContentLoaded', toggleLocationField);
+</script>
+{% endblock %}
