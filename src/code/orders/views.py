@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib import messages
 from core.utils import get_product, save_order, get_user_orders, get_farmer_orders, update_product_stock
 from .logistics import calculate_shipping_fee, generate_tracking_number, get_tracking_status
-from .payments import create_gcash_payment_link
+from .payments import create_gcash_payment_link, verify_gcash_payment
 import datetime
 import json
 import uuid
@@ -196,11 +196,17 @@ def checkout_view(request):
         }
         
         if payment_method == 'gcash':
-            return render(request, 'orders/payment_gateway.html', {
-                'total': total,
-                'transaction_id': str(uuid.uuid4()),
-                'order_data_json': json.dumps(order_data, default=str)
-            })
+            # Use PayMongo to create a payment link
+            payment_id, checkout_url = create_gcash_payment_link(total, f"Order for {request.user.username}")
+            
+            if checkout_url:
+                # Store order data in session to save after payment
+                request.session['pending_order'] = order_data
+                request.session['payment_id'] = payment_id
+                return redirect(checkout_url)
+            else:
+                messages.error(request, "Failed to initialize payment. Please try again.")
+                return redirect('checkout')
         else:
             # COD
             order_data['payment_status'] = 'Pending'
@@ -229,6 +235,49 @@ def checkout_view(request):
         'total': total,
         'addresses': addresses
     })
+
+def payment_success(request):
+    """
+    Callback for successful payment.
+    """
+    # In a real integration, PayMongo would call a webhook.
+    # For this simple flow, we check the session or query params.
+    
+    # If using the mock flow or redirect flow
+    pending_order = request.session.get('pending_order')
+    payment_id = request.session.get('payment_id')
+    
+    if pending_order and payment_id:
+        # Verify payment status
+        if verify_gcash_payment(payment_id):
+            pending_order['status'] = 'Paid'
+            pending_order['payment_status'] = 'Escrow'
+            pending_order['is_escrow'] = True
+            
+            save_order(pending_order)
+            
+            # Update stock
+            for item in pending_order['items']:
+                update_product_stock(item['product_id'], item['quantity'])
+            
+            # Clear session
+            del request.session['pending_order']
+            del request.session['payment_id']
+            request.session['cart'] = {}
+            if 'voucher_code' in request.session:
+                del request.session['voucher_code']
+                
+            messages.success(request, "Payment successful! Order placed.")
+            return redirect('order_history')
+        else:
+            messages.error(request, "Payment verification failed.")
+            return redirect('checkout')
+            
+    return redirect('home')
+
+def payment_failed(request):
+    messages.error(request, "Payment was cancelled or failed.")
+    return redirect('checkout')
 
 def process_payment(request):
     if request.method == 'POST':

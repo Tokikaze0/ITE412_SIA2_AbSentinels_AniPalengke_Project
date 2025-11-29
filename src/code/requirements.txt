@@ -3,3 +3,4 @@ firebase-admin
 google-generativeai
 Pillow
 python-dotenv
+requests

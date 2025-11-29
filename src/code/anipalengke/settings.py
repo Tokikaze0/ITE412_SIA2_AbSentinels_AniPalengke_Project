@@ -177,3 +177,14 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # Security Settings for Google Sign-In
 # This is required to allow the Google Sign-In popup to communicate with the window
 SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'
+
+# Lalamove Configuration
+LALAMOVE_API_KEY = os.getenv('LALAMOVE_API_KEY', 'pk_test_12345') # Default to a dummy key for dev if not set
+LALAMOVE_API_SECRET = os.getenv('LALAMOVE_API_SECRET', 'sk_test_12345')
+LALAMOVE_BASE_URL = os.getenv('LALAMOVE_BASE_URL', 'https://rest.sandbox.lalamove.com')
+LALAMOVE_MARKET = 'PH'
+
+# PayMongo Configuration
+PAYMONGO_PUBLIC_KEY = os.getenv('PAYMONGO_PUBLIC_KEY', 'pk_test_your_public_key')
+PAYMONGO_SECRET_KEY = os.getenv('PAYMONGO_SECRET_KEY', 'sk_test_your_secret_key')
+PAYMONGO_BASE_URL = os.getenv('PAYMONGO_BASE_URL', 'https://api.paymongo.com/v1')

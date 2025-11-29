@@ -121,6 +121,18 @@
             mobileBtn.classList.toggle('active');
         });
     }
+
+    // Auto-dismiss notifications after 5 seconds
+    const toasts = document.querySelectorAll('.toast');
+    toasts.forEach(toast => {
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transition = 'opacity 0.5s ease';
+            setTimeout(() => {
+                toast.remove();
+            }, 500); // Wait for fade out transition
+        }, 5000);
+    });
   </script>
 </body>
 </html>

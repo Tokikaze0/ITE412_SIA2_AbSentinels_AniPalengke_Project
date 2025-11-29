@@ -217,6 +217,31 @@ def change_password_firestore(user_id, old_password, new_password):
             return False, str(e)
     return False, "Database error"
 
+def reset_password_firestore(user_id, new_password):
+    db = get_db()
+    if db:
+        try:
+            db.collection('users').document(user_id).update({
+                'password': make_password(new_password)
+            })
+            return True
+        except Exception as e:
+            print(f"Reset password error: {e}")
+            return False
+    return False
+
+def get_user_by_email(email):
+    db = get_db()
+    if db:
+        try:
+            users_ref = db.collection('users')
+            docs = users_ref.where('email', '==', email).stream()
+            for doc in docs:
+                return {'id': doc.id, **doc.to_dict()}
+        except Exception as e:
+            print(f"Get user by email error: {e}")
+    return None
+
 def get_user_by_id(user_id):
     db = get_db()
     if db:
@@ -573,13 +598,24 @@ def get_user_notifications(user_id):
     db = get_db()
     if db:
         try:
-            ref = db.collection('notifications').where('user_id', '==', user_id).order_by('created_at', direction=firestore.Query.DESCENDING)
+            ref = db.collection('notifications').where('user_id', '==', user_id).where('read', '==', False).order_by('created_at', direction=firestore.Query.DESCENDING)
             docs = ref.stream()
             return [{'id': doc.id, **doc.to_dict()} for doc in docs]
         except Exception as e:
             print(f"Get notifications error: {e}")
             return []
     return []
+
+def mark_notification_read(notification_id):
+    db = get_db()
+    if db:
+        try:
+            db.collection('notifications').document(notification_id).update({'read': True})
+            return True
+        except Exception as e:
+            print(f"Mark notification read error: {e}")
+            return False
+    return False
 
 def add_review(product_id, user_id, user_name, rating, comment):
     db = get_db()
