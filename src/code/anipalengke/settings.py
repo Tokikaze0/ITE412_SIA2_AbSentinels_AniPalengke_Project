@@ -31,7 +31,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-vuq-&t5@hha+jxr!m-fkh%c3hc
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -153,15 +153,36 @@ PAYMENT_GATEWAY_KEY = os.getenv('PAYMENT_GATEWAY_KEY')
 # Firebase Initialization
 try:
     if not firebase_admin._apps:
-        cred_path = BASE_DIR / 'serviceAccountKey.json'
-        if cred_path.exists():
-            cred = credentials.Certificate(str(cred_path))
+        cred = None
+        
+        # 1. Check Local File
+        local_cred_path = BASE_DIR / 'serviceAccountKey.json'
+        
+        # 2. Check Render Secret File (Standard Path)
+        render_cred_path = Path('/etc/secrets/serviceAccountKey.json')
+        
+        # 3. Check Environment Variable (JSON Content)
+        env_creds = os.getenv('FIREBASE_CREDENTIALS_JSON')
+
+        if local_cred_path.exists():
+            cred = credentials.Certificate(str(local_cred_path))
+            print(f"Firebase: Loaded from local file: {local_cred_path}")
+        elif render_cred_path.exists():
+            cred = credentials.Certificate(str(render_cred_path))
+            print(f"Firebase: Loaded from Render secret file: {render_cred_path}")
+        elif env_creds:
+            import json
+            cred_dict = json.loads(env_creds)
+            cred = credentials.Certificate(cred_dict)
+            print("Firebase: Loaded from environment variable")
+            
+        if cred:
             firebase_admin.initialize_app(cred)
             print("\n---------------------------------------------------")
-            print("SUCCESS: Firebase initialized with serviceAccountKey.json")
+            print("SUCCESS: Firebase initialized")
             print("---------------------------------------------------\n")
         else:
-            print("Warning: serviceAccountKey.json not found. Firebase not initialized.")
+            print("Warning: No Firebase credentials found (checked local, /etc/secrets, and env var).")
 except Exception as e:
     print(f"Error initializing Firebase: {e}")
 
