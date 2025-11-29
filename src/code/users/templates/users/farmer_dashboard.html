@@ -15,7 +15,12 @@
             <div class="card-body" style="border-bottom: 1px solid var(--gray-200); padding: 15px;">
                 <div style="display: flex; justify-content: space-between; align-items: start;">
                     <p style="margin: 0; color: var(--gray-900); font-weight: 500;">{{ notif.message }}</p>
-                    <small class="muted">{{ notif.created_at|date:"M d, Y" }}</small>
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <small class="muted">{{ notif.created_at|date:"M d, Y" }}</small>
+                        <a href="{% url 'mark_notification_read' notif.id %}" style="color: var(--gray-400); text-decoration: none;" onmouseover="this.style.color='var(--red-500)'" onmouseout="this.style.color='var(--gray-400)'" title="Dismiss">
+                            <i class="fa-solid fa-times"></i>
+                        </a>
+                    </div>
                 </div>
             </div>
             {% endfor %}

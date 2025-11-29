@@ -1,0 +1,25 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Verify Code · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:520px;">
+  <div class="card">
+    <div class="card-header">Verify Reset Code</div>
+    <div class="card-body">
+      <p class="muted">We sent a 6-digit code to <strong>{{ email }}</strong>.</p>
+      <form method="post" class="form">
+        {% csrf_token %}
+        <div class="form-row">
+          <label class="label" for="otp">Enter Code</label>
+          <input class="input" type="text" id="otp" name="otp" placeholder="123456" required maxlength="6" style="letter-spacing: 5px; text-align: center; font-size: 1.5rem;" />
+        </div>
+        <button class="btn btn-primary" type="submit">Verify Code</button>
+        <div class="muted" style="margin-top: 15px;">
+            <a href="{% url 'forgot_password' %}">Resend Code</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

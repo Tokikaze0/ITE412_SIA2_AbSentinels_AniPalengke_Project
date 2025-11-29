@@ -3,7 +3,7 @@ from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
 import random
-from core.utils import get_all_products, update_product_status, get_product, create_user_firestore, authenticate_user_firestore, get_all_farmers, verify_farmer_firestore, update_user_firestore, change_password_firestore, get_user_by_id, get_dashboard_stats, approve_product, check_expired_products, get_user_notifications, get_db
+from core.utils import get_all_products, update_product_status, get_product, create_user_firestore, authenticate_user_firestore, get_all_farmers, verify_farmer_firestore, update_user_firestore, change_password_firestore, get_user_by_id, get_dashboard_stats, approve_product, check_expired_products, get_user_notifications, mark_notification_read, get_db, get_user_by_email, reset_password_firestore
 from core.ai import validate_crop
 import json
 from django.http import JsonResponse
@@ -448,3 +448,88 @@ def approve_product_view(request, product_id):
             messages.error(request, "Failed to approve product. Check console for errors.")
             
     return redirect('admin_product_list')
+
+def mark_notification_read_view(request, notification_id):
+    if not request.user.is_authenticated:
+        return redirect('login')
+        
+    if mark_notification_read(notification_id):
+        pass
+    else:
+        messages.error(request, "Failed to dismiss notification.")
+        
+    return redirect('dashboard')
+
+def forgot_password_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        user = get_user_by_email(email)
+        
+        if user:
+            # Generate OTP
+            otp = str(random.randint(100000, 999999))
+            
+            # Store in session
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+            request.session['reset_user_id'] = user['id']
+            
+            # Send Email
+            try:
+                send_mail(
+                    'Password Reset Code - AniPalengke',
+                    f'Your password reset code is: {otp}',
+                    'noreply@anipalengke.com',
+                    [email],
+                    fail_silently=False,
+                )
+                messages.success(request, f"Reset code sent to {email}")
+                return redirect('verify_reset_otp')
+            except Exception as e:
+                messages.error(request, f"Failed to send email: {e}")
+        else:
+            messages.error(request, "Email not found.")
+            
+    return render(request, 'users/forgot_password.html')
+
+def verify_reset_otp_view(request):
+    if 'reset_otp' not in request.session:
+        return redirect('forgot_password')
+        
+    if request.method == 'POST':
+        otp = request.POST.get('otp')
+        if otp == request.session.get('reset_otp'):
+            request.session['reset_verified'] = True
+            return redirect('reset_password')
+        else:
+            messages.error(request, "Invalid code.")
+            
+    return render(request, 'users/verify_reset_otp.html', {'email': request.session.get('reset_email')})
+
+def reset_password_view(request):
+    if not request.session.get('reset_verified'):
+        return redirect('forgot_password')
+        
+    if request.method == 'POST':
+        new_password = request.POST.get('new_password')
+        confirm_password = request.POST.get('confirm_password')
+        
+        if new_password != confirm_password:
+            messages.error(request, "Passwords do not match.")
+        else:
+            user_id = request.session.get('reset_user_id')
+            if reset_password_firestore(user_id, new_password):
+                # Clear session
+                del request.session['reset_otp']
+                del request.session['reset_email']
+                del request.session['reset_user_id']
+                del request.session['reset_verified']
+                
+                messages.success(request, "Password reset successfully. Please login.")
+                return redirect('login')
+            else:
+                messages.error(request, "Failed to reset password.")
+                
+    return render(request, 'users/reset_password.html')
+
+

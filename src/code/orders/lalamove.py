@@ -1,55 +1,95 @@
-import random
 import time
+import hmac
+import hashlib
+import uuid
+import requests
+import json
+from django.conf import settings
 
 class LalamoveService:
-    """
-    Mock service for Lalamove API integration.
-    In a real application, this would make HTTP requests to Lalamove's API endpoints.
-    """
-    
-    BASE_URL = "https://rest.sandbox.lalamove.com" # Sandbox URL
-    
-    @staticmethod
-    def get_quotation(pickup_address, delivery_address):
-        """
-        Get a delivery quotation.
-        """
-        # Mock logic: Calculate fee based on string length difference or random
-        # In real app: Call /v3/quotations
-        
-        base_fee = 60.00
-        distance_fee = random.uniform(20, 150)
-        total_fee = base_fee + distance_fee
-        
-        return {
-            'quotation_id': f"QUOT_{int(time.time())}",
-            'price_breakdown': {
-                'base': base_fee,
-                'distance': distance_fee,
-                'total': round(total_fee, 2),
-                'currency': 'PHP'
-            },
-            'distance': f"{random.randint(2, 15)} km",
-            'eta': f"{random.randint(15, 45)} mins"
+    def __init__(self):
+        self.host = settings.LALAMOVE_BASE_URL
+        self.key = settings.LALAMOVE_API_KEY
+        self.secret = settings.LALAMOVE_API_SECRET
+        self.market = settings.LALAMOVE_MARKET
+
+    def _generate_signature(self, method, path, body=""):
+        time_stamp = int(time.time() * 1000)
+        raw_signature = f"{time_stamp}\r\n{method}\r\n{path}\r\n\r\n{body}"
+        signature = hmac.new(
+            self.secret.encode(), raw_signature.encode(), hashlib.sha256
+        ).hexdigest()
+        return time_stamp, signature
+
+    def _request(self, method, path, payload=None):
+        url = f"{self.host}{path}"
+        body = json.dumps(payload) if payload else ""
+        time_stamp, signature = self._generate_signature(method, path, body)
+
+        headers = {
+            "Authorization": f"hmac {self.key}:{time_stamp}:{signature}",
+            "Market": self.market,
+            "Content-Type": "application/json",
+            "Accept": "application/json",
         }
 
-    @staticmethod
-    def place_delivery(quotation_id, contact_name, contact_phone):
-        """
-        Place a delivery order using a quotation.
-        """
-        # In real app: Call /v3/orders
-        return {
-            'order_ref': f"LALA_{int(time.time())}",
-            'status': 'ASSIGNING_DRIVER',
-            'driver': None,
-            'share_link': f"https://lalamove.app/tracking/{int(time.time())}"
-        }
+        # Generate a unique request ID for idempotency
+        if method == 'POST':
+            headers['X-Request-ID'] = str(uuid.uuid4())
 
-    @staticmethod
-    def get_order_status(order_ref):
+        try:
+            response = requests.request(method, url, headers=headers, data=body)
+            response.raise_for_status()
+            return response.json()
+        except requests.exceptions.RequestException as e:
+            print(f"Lalamove API Error: {e}")
+            # Return error dict instead of crashing, or re-raise depending on preference
+            return {"error": str(e)}
+
+    def get_quotation(self, pickup_address, delivery_address):
         """
-        Check status of delivery.
+        Get a price quote for delivery.
         """
-        statuses = ['ASSIGNING_DRIVER', 'ON_GOING', 'PICKED_UP', 'COMPLETED']
-        return random.choice(statuses)
+        path = "/v3/quotations"
+        payload = {
+            "data": {
+                "serviceType": "MOTORCYCLE", # or VAN, TRUCK330, etc.
+                "stops": [
+                    {"address": pickup_address},
+                    {"address": delivery_address}
+                ],
+                "language": "en_PH"
+            }
+        }
+        return self._request("POST", path, payload)
+
+    def place_order(self, quotation_id, sender_details, recipient_details):
+        """
+        Place an order using a quotation ID.
+        """
+        path = "/v3/orders"
+        payload = {
+            "data": {
+                "quotationId": quotation_id,
+                "sender": {
+                    "stopId": sender_details.get('stopId'),
+                    "name": sender_details.get('name'),
+                    "phone": sender_details.get('phone')
+                },
+                "recipients": [
+                    {
+                        "stopId": recipient_details.get('stopId'),
+                        "name": recipient_details.get('name'),
+                        "phone": recipient_details.get('phone')
+                    }
+                ]
+            }
+        }
+        return self._request("POST", path, payload)
+
+    def get_order_details(self, order_id):
+        """
+        Get details of a specific order.
+        """
+        path = f"/v3/orders/{order_id}"
+        return self._request("GET", path)
