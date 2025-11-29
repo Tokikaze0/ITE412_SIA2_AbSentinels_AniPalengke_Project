@@ -12,5 +12,5 @@ services:
       - key: SECRET_KEY
         generateValue: true
     secretFiles:
-      - key: serviceAccountKey.json
+      - name: serviceAccountKey.json
         mountPath: /etc/secrets/serviceAccountKey.json
