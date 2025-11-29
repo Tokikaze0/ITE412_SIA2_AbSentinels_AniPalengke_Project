@@ -1,0 +1,186 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Admin Dashboard · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header">
+        <h2>Platform Statistics</h2>
+    </div>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <div class="card card-body text-center">
+            <h3>{{ stats.total_users }}</h3>
+            <p class="muted">Total Users</p>
+        </div>
+        <div class="card card-body text-center">
+            <h3>{{ stats.farmers }}</h3>
+            <p class="muted">Farmers</p>
+        </div>
+        <div class="card card-body text-center">
+            <h3>{{ stats.buyers }}</h3>
+            <p class="muted">Buyers</p>
+        </div>
+        <div class="card card-body text-center">
+            <h3>{{ stats.total_products }}</h3>
+            <p class="muted">Total Products</p>
+        </div>
+        <div class="card card-body text-center">
+            <h3>{{ stats.total_orders }}</h3>
+            <p class="muted">Total Orders</p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <div class="card card-body">
+            <h4 class="text-center mb-3">User Distribution</h4>
+            <canvas id="userChart"></canvas>
+        </div>
+        <div class="card card-body">
+            <h4 class="text-center mb-3">Product Status</h4>
+            <canvas id="productChart"></canvas>
+        </div>
+    </div>
+
+    <div class="section-header">
+        <h2>Farmer Verification</h2>
+        <p class="muted">Approve new farmer registrations.</p>
+    </div>
+    
+    {% if farmers %}
+    <div class="grid">
+        {% for farmer in farmers %}
+        <div class="card card-body" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h3>{{ farmer.username }}</h3>
+                <p class="muted">{{ farmer.email }}</p>
+            </div>
+            <a href="{% url 'admin_verify_farmer' farmer.id %}" class="btn btn-primary">Verify</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="card card-body" style="text-align: center; margin-bottom: 20px;">
+        <p class="muted">No pending farmer verifications.</p>
+    </div>
+    {% endif %}
+
+    <div class="section-header" style="margin-top: 40px;">
+        <h2>Product Approvals</h2>
+        <p class="muted">Review and approve farmer product submissions.</p>
+    </div>
+
+    {% if ai_check_result and ai_check_id %}
+    <div class="card card-body" style="border-left: 4px solid {% if ai_check_result.is_valid %}var(--green-500){% else %}var(--red-500){% endif %}; margin-bottom: 20px;">
+        <h4>AI Validation Result</h4>
+        <p><strong>Valid Crop:</strong> {% if ai_check_result.is_valid %}✅ Yes{% else %}❌ No{% endif %}</p>
+        <p><strong>Reason:</strong> {{ ai_check_result.reason }}</p>
+        {% if ai_check_result.suggested_category %}
+        <p><strong>Suggested Category:</strong> {{ ai_check_result.suggested_category }}</p>
+        {% endif %}
+        <small class="muted">For Product ID: {{ ai_check_id }}</small>
+    </div>
+    {% endif %}
+
+    {% if not products %}
+    <div class="card card-body" style="text-align: center; padding: 40px;">
+        <h3>No pending approvals</h3>
+        <p class="muted">All caught up!</p>
+    </div>
+    {% else %}
+    <div class="grid">
+        {% for product in products %}
+        <div class="card">
+            {% if product.image %}
+            <img src="{{ product.image }}" alt="{{ product.name }}" style="width: 100%; height: 200px; object-fit: cover;">
+            {% else %}
+            <div style="width: 100%; height: 200px; background: #eee; display: flex; align-items: center; justify-content: center;">No Image</div>
+            {% endif %}
+            <div class="card-body">
+                <h3>{{ product.name }}</h3>
+                <p class="muted">By: {{ product.farmer_name }}</p>
+                <p>{{ product.description }}</p>
+                <div class="grid grid-2" style="margin-top: 10px;">
+                    <div>
+                        <strong>Price:</strong> ₱{{ product.price }}
+                    </div>
+                    <div>
+                        <strong>Stock:</strong> {{ product.stock }}
+                    </div>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <form action="{% url 'approve_product' product.id %}" method="post">
+                        {% csrf_token %}
+                        <div style="margin-bottom: 10px;">
+                            <label for="exp_{{ product.id }}" style="font-size: 0.85rem; font-weight: 600; color: var(--gray-700); display: block; margin-bottom: 4px;">Set Expiration Date</label>
+                            <input type="date" id="exp_{{ product.id }}" name="expiration_date" required class="input" style="padding: 8px;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button type="submit" class="btn btn-primary" style="flex: 1;">Approve</button>
+                            <a href="{% url 'admin_product_action' product.id 'rejected' %}" class="btn btn-danger" style="flex: 1; text-align: center;">Reject</a>
+                        </div>
+                    </form>
+                    <a href="{% url 'admin_check_ai' product.id %}" class="btn btn-ghost" style="width: 100%; margin-top: 8px; text-align: center;">🤖 Check AI</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src='https://cdn.jsdelivr.net/npm/chart.js'></script>
+<script>
+    // User Distribution Chart
+    const userCtx = document.getElementById('userChart').getContext('2d');
+    new Chart(userCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Farmers', 'Buyers'],
+            datasets: [{
+                data: [{{ stats.farmers }}, {{ stats.buyers }}],
+                backgroundColor: ['#2ecc71', '#3498db'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+
+    // Product Status Chart
+    const productCtx = document.getElementById('productChart').getContext('2d');
+    // Calculate active products
+    const totalProducts = {{ stats.total_products }};
+    const pendingProducts = {{ stats.pending_products }};
+    const activeProducts = totalProducts - pendingProducts;
+
+    new Chart(productCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Active', 'Pending'],
+            datasets: [{
+                data: [activeProducts, pendingProducts],
+                backgroundColor: ['#2ecc71', '#f1c40f'],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                }
+            }
+        }
+    });
+</script>
+{% endblock %}

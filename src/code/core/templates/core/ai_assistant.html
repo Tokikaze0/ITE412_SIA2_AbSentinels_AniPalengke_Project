@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+
+{% block title %}AniPalengke Smart Assistant{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header ai-header">
+        <div>
+            <h2 style="margin-bottom: 5px;">Smart Assistant</h2>
+            <p class="muted" style="margin: 0;">Powered by Gemini AI</p>
+        </div>
+        <form action="{% url 'ai_clear_chat' %}" method="post">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-ghost" style="font-size: 0.9rem;">Clear History</button>
+        </form>
+    </div>
+
+    <div class="ai-grid">
+        <!-- Chatbot Section -->
+        <div class="chat-container">
+            <div class="chat-history" id="chatHistory">
+                {% if not chat_history %}
+                <div style="text-align: center; color: var(--gray-500); margin-top: 40px;">
+                    <div style="font-size: 3rem; margin-bottom: 10px;">👋</div>
+                    <p>Hello! I'm your farming assistant.</p>
+                    <p style="font-size: 0.9rem;">Ask me about crops, prices, or farming tips.</p>
+                </div>
+                {% endif %}
+
+                {% for msg in chat_history %}
+                    {% if msg.role == 'user' %}
+                    <div class="message message-user">
+                        {{ msg.content }}
+                    </div>
+                    {% else %}
+                    <div class="message message-ai">
+                        {{ msg.content|linebreaksbr }}
+                    </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <form method="post" action="{% url 'ai_chat' %}" class="chat-input-area">
+                {% csrf_token %}
+                <textarea name="prompt" placeholder="Type your question here..." required></textarea>
+                <button type="submit" class="chat-send-btn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
+            </form>
+        </div>
+
+        <!-- Image Analysis Section -->
+        <div class="tool-card">
+            <h3>Crop Identifier</h3>
+            <p class="muted tool-description">Upload a photo to identify crops or detect diseases.</p>
+            
+            <form method="post" action="{% url 'ai_analyze' %}" enctype="multipart/form-data">
+                {% csrf_token %}
+                <label class="upload-area upload-label">
+                    <div class="upload-icon">📷</div>
+                    <span class="upload-text">Click to Upload Image</span>
+                    <input type="file" name="image" accept="image/*" style="display: none;" onchange="this.form.submit()">
+                </label>
+            </form>
+
+            {% if analysis_response %}
+            <div class="analysis-result">
+                <strong class="analysis-title">Analysis Result:</strong>
+                <p class="analysis-text">{{ analysis_response|linebreaks }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Auto-scroll to bottom of chat
+    const chatHistory = document.getElementById('chatHistory');
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+</script>
+{% endblock %}

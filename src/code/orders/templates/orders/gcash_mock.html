@@ -1,0 +1,26 @@
+{% extends 'core/base.html' %}
+
+{% block title %}GCash Payment{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 400px; margin-top: 50px;">
+    <div class="card card-body" style="text-align: center; border: 1px solid #007bff;">
+        <h2 style="color: #007bff;">GCash</h2>
+        <p>Merchant: <strong>AniPalengke</strong></p>
+        <p>Amount Due: <strong style="font-size: 1.5rem;">₱{{ amount }}</strong></p>
+        
+        <hr>
+        
+        <form method="post" action="{% url 'gcash_confirm' payment_id %}">
+            {% csrf_token %}
+            <div class="form-group" style="text-align: left;">
+                <label>Mobile Number</label>
+                <input type="text" class="input" value="09171234567" readonly>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; background-color: #007bff; border-color: #007bff;">Pay Now</button>
+        </form>
+        <br>
+        <a href="{% url 'cart' %}" style="color: #666;">Cancel</a>
+    </div>
+</div>
+{% endblock %}

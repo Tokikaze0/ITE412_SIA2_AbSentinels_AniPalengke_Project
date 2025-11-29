@@ -1,0 +1,142 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Chat with {{ other_user.name|default:other_user.username }} · AniPalengke{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chat-container {
+        display: flex;
+        flex-direction: column;
+        height: 600px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .chat-header {
+        padding: 15px;
+        background: #f9f9f9;
+        border-bottom: 1px solid #ddd;
+        font-weight: bold;
+    }
+    .chat-messages {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .message {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 15px;
+        position: relative;
+    }
+    .message.sent {
+        align-self: flex-end;
+        background: #2ecc71;
+        color: white;
+        border-bottom-right-radius: 2px;
+    }
+    .message.received {
+        align-self: flex-start;
+        background: #f1f1f1;
+        color: #333;
+        border-bottom-left-radius: 2px;
+    }
+    .message-time {
+        font-size: 0.7rem;
+        opacity: 0.7;
+        margin-top: 5px;
+        text-align: right;
+    }
+    .chat-input-area {
+        padding: 15px;
+        background: #f9f9f9;
+        border-top: 1px solid #ddd;
+    }
+    .chat-form {
+        display: flex;
+        gap: 10px;
+    }
+    .chat-input {
+        flex: 1;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+    }
+    .chat-input:focus {
+        border-color: #2ecc71;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header">
+        <a href="{% url 'inbox' %}" class="btn btn-ghost" style="margin-bottom: 1rem;">&larr; Back to Inbox</a>
+    </div>
+
+    <div class="chat-container">
+        <div class="chat-header">
+            {{ other_user.name|default:other_user.username }}
+        </div>
+        <div class="chat-messages" id="chat-messages">
+            {% for message in messages %}
+                <div class="message {% if message.sender_id == request.user.id %}sent{% else %}received{% endif %}">
+                    {{ message.content }}
+                    <div class="message-time">{{ message.timestamp|date:"g:i A" }}</div>
+                </div>
+            {% endfor %}
+        </div>
+        <div class="chat-input-area">
+            <form method="post" class="chat-form">
+                {% csrf_token %}
+                <input type="text" name="content" class="chat-input" placeholder="Type a message..." required autocomplete="off">
+                <button type="submit" class="btn btn-primary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">➤</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById('chat-messages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Simple polling for new messages (every 3 seconds)
+    const conversationId = {{ conversation.id }};
+    const currentUserId = {{ request.user.id }};
+    
+    setInterval(() => {
+        fetch(`/chat/api/messages/${conversationId}/`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.messages) {
+                    const currentCount = chatMessages.children.length;
+                    if (data.messages.length > currentCount) {
+                        // Clear and rebuild (simple approach, can be optimized)
+                        chatMessages.innerHTML = '';
+                        data.messages.forEach(msg => {
+                            const isSent = msg.sender__id === currentUserId;
+                            const div = document.createElement('div');
+                            div.className = `message ${isSent ? 'sent' : 'received'}`;
+                            
+                            // Format time (simplified)
+                            const date = new Date(msg.timestamp);
+                            const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+                            
+                            div.innerHTML = `
+                                ${msg.content}
+                                <div class="message-time">${timeStr}</div>
+                            `;
+                            chatMessages.appendChild(div);
+                        });
+                        chatMessages.scrollTop = chatMessages.scrollHeight;
+                    }
+                }
+            });
+    }, 3000);
+</script>
+{% endblock %}

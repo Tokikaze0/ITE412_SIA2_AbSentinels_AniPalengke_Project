@@ -1,0 +1,98 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Account Settings · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container settings-container">
+    <div class="section-header">
+        <h2>Account Settings</h2>
+        <p class="muted">Manage your profile and security preferences.</p>
+    </div>
+
+    <div class="settings-grid">
+        <!-- Profile Information -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Profile Information</h3>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_profile">
+                    
+                    <div class="profile-avatar-section">
+                        <div class="profile-avatar">
+                            {% if user_data.profile_image %}
+                                <img src="{{ user_data.profile_image }}" alt="Profile" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                <span style="font-size: 2rem; color: var(--gray-500); font-weight: bold;">{{ user_data.username|slice:":1"|upper }}</span>
+                            {% endif %}
+                        </div>
+                        <label for="profile_image" class="btn btn-ghost btn-sm" style="cursor: pointer;">
+                            Change Photo
+                            <input type="file" id="profile_image" name="profile_image" style="display: none;" accept="image/*" onchange="this.form.submit()">
+                        </label>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="name" class="label">Full Name</label>
+                        <input type="text" id="name" name="name" class="input" value="{{ user_data.name|default:user_data.username }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="username" class="label">Username</label>
+                        <input type="text" id="username" name="username" class="input" value="{{ user_data.username }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="label">Email Address</label>
+                        <input type="email" id="email" name="email" class="input" value="{{ user_data.email }}" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="location" class="label">Location</label>
+                        <input type="text" id="location" name="location" class="input" value="{{ user_data.location|default:'' }}" placeholder="e.g. Bulacan, Pampanga">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="label">Role</label>
+                        <input type="text" class="input" value="{{ user_data.role|title }}" disabled style="background: var(--gray-100);">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Save Changes</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Security -->
+        <div class="card">
+            <div class="card-header">
+                <h3>Change Password</h3>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="change_password">
+                    
+                    <div class="form-group">
+                        <label for="old_password" class="label">Current Password</label>
+                        <input type="password" id="old_password" name="old_password" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="new_password" class="label">New Password</label>
+                        <input type="password" id="new_password" name="new_password" class="input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirm_password" class="label">Confirm New Password</label>
+                        <input type="password" id="confirm_password" name="confirm_password" class="input" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">Update Password</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

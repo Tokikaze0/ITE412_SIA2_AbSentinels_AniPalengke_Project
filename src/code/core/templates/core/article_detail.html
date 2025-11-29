@@ -1,0 +1,21 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ article.title }} · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="section-header">
+        <a href="{% url 'knowledge_base' %}" class="btn btn-ghost" style="margin-bottom: 1rem;">&larr; Back to Knowledge Portal</a>
+        <h2>{{ article.title }}</h2>
+        <p class="muted">{{ article.created_at|date:"F j, Y" }} · {{ article.category }}</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="article-content">
+                {{ article.content|linebreaks }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

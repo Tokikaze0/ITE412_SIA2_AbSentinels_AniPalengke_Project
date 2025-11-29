@@ -1,0 +1,143 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Login · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width:520px;">
+  <div class="card">
+    <div class="card-header">Login to AniPalengke</div>
+    <div class="card-body">
+      <form method="post" class="form">
+        {% csrf_token %}
+        <div class="form-row">
+          <label class="label" for="username">Username</label>
+          <input class="input" type="text" id="username" name="username" required />
+        </div>
+        <div class="form-row">
+          <label class="label" for="password">Password</label>
+          <input class="input" type="password" id="password" name="password" required />
+        </div>
+        <button class="btn btn-primary" type="submit">Login</button>
+        <div class="muted">No account? <a href="{% url 'register' %}">Register</a></div>
+        
+        <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+            <button type="button" id="google-signin-btn" class="btn btn-secondary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px; background-color: #fff; color: #757575; border: 1px solid #ddd;">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" height="18">
+                Sign in with Google
+            </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+  const firebaseConfig = {
+      apiKey: "AIzaSyBRmfhKwL27gLQdf6jwXEqPPB7IjSXNxxA",
+      authDomain: "ani-palengke.firebaseapp.com",
+      projectId: "ani-palengke",
+      storageBucket: "ani-palengke.firebasestorage.app",
+      messagingSenderId: "682648476713",
+      appId: "1:682648476713:web:9a071cd6b5a2a98c481038",
+      measurementId: "G-E4TY8JX69R"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const provider = new GoogleAuthProvider();
+  
+  // Force account selection prompt
+  provider.setCustomParameters({
+    prompt: 'select_account'
+  });
+
+  // Status display for debugging (Console only)
+  function updateStatus(msg, isError = false) {
+      console.log('[Login Status]', msg);
+  }
+
+  // Handle backend authentication
+  function authenticateBackend(user) {
+      updateStatus('Authenticating with server...');
+      
+      fetch("{% url 'google_login' %}", {
+          method: 'POST',
+          headers: {
+              'Content-Type': 'application/json',
+              'X-CSRFToken': '{{ csrf_token }}'
+          },
+          body: JSON.stringify({
+              email: user.email,
+              displayName: user.displayName,
+              uid: user.uid
+          })
+      })
+      .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+      })
+      .then(data => {
+          if (data.success) {
+              updateStatus('Login successful! Redirecting...');
+              window.location.href = "{% url 'dashboard' %}";
+          } else {
+              updateStatus('Server Login Failed: ' + data.error, true);
+              alert('Server Login Failed: ' + data.error);
+          }
+      })
+      .catch(err => {
+          updateStatus('Connection Error: ' + err.message, true);
+          console.error('Fetch error:', err);
+      });
+  }
+
+  // Listen for auth state changes
+  onAuthStateChanged(auth, (user) => {
+      if (user) {
+          // If we are on the login page and a user is detected, it means they are logged in to Firebase
+          // but not Django (or they wouldn't be here).
+          // To prevent auto-login loops and allow account switching, we do NOT auto-login here.
+          // Instead, we show the user is connected and let them click the button to proceed/switch.
+          
+          updateStatus(`Connected to Google as ${user.email}. Click button to continue or switch.`);
+          
+          // Optional: If you want to force logout from Firebase when visiting this page to ensure fresh login:
+          // auth.signOut(); 
+          // But keeping it allows "Click to continue" without popup if they want the same account.
+      } else {
+          updateStatus('Ready to sign in.');
+      }
+  });
+
+  const btn = document.getElementById('google-signin-btn');
+  if (btn) {
+      btn.addEventListener('click', () => {
+        updateStatus('Opening Google Sign-In...');
+        
+        // Always force popup to allow account selection
+        signInWithPopup(auth, provider)
+          .then((result) => {
+            updateStatus('Google Auth Success. Syncing...');
+            authenticateBackend(result.user);
+          })
+          .catch((error) => {
+            console.error('Firebase Auth Error:', error);
+            let msg = 'Sign-In Failed: ' + error.message;
+            
+            if (error.code === 'auth/popup-closed-by-user') {
+                msg = 'Sign-In cancelled by user.';
+            } else if (error.code === 'auth/unauthorized-domain') {
+                msg = 'Domain not authorized in Firebase Console.\n\nACTION REQUIRED:\n1. Go to Firebase Console > Authentication > Settings > Authorized Domains.\n2. Add "localhost" AND "127.0.0.1".\n3. If using ngrok or similar, add that domain too.';
+            }
+            
+            updateStatus(msg, true);
+            alert(msg);
+          });
+      });
+  }
+</script>
+{% endblock %}

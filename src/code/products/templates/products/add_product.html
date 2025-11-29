@@ -1,0 +1,175 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Add Product · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 700px;">
+    <div class="section-header">
+        <h2>Add New Product</h2>
+        <p class="muted">Submit your crop for admin approval.</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data" class="form">
+                {% csrf_token %}
+                
+                <!-- Image Upload Section -->
+                <div class="form-group">
+                    <label class="label">Product Image</label>
+                    <label class="upload-area" id="drop-zone">
+                        <input type="file" id="image" name="image" accept="image/*" required style="display: none;" onchange="previewImage(this)">
+                        <div id="upload-placeholder">
+                            <div style="font-size: 2.5rem; margin-bottom: 10px;">📸</div>
+                            <span style="color: var(--green-600); font-weight: 600;">Click to Upload Photo</span>
+                            <p class="muted" style="font-size: 0.9rem; margin-top: 5px;">Supported formats: JPG, PNG</p>
+                        </div>
+                        <img id="image-preview" src="#" alt="Preview" style="display: none; max-height: 300px; width: 100%; object-fit: contain; border-radius: 8px;">
+                    </label>
+                </div>
+
+                <div class="form-group">
+                    <label for="name" class="label">Product Name</label>
+                    <input type="text" id="name" name="name" class="input" placeholder="e.g., Fresh Tomatoes" required>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="price" class="label">Price (₱ per kg/pc)</label>
+                        <input type="number" id="price" name="price" class="input" step="0.01" placeholder="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="stock" class="label">Available Stock</label>
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <input type="number" id="stock" name="stock" class="input" placeholder="0" required>
+                            <span class="muted" style="font-size: 0.9rem; white-space: nowrap;">kg / pcs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label for="category" class="label">Category</label>
+                        <select id="category" name="category" class="select" required>
+                            <option value="" disabled selected>Select Category</option>
+                            <option value="Gulay">Gulay (Vegetables)</option>
+                            <option value="Prutas">Prutas (Fruits)</option>
+                            <option value="Root Crops">Root Crops</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="location" class="label">Farm Location</label>
+                        <input type="text" id="location" name="location" class="input" value="{{ request.session.location|default:'' }}" placeholder="e.g. Bulacan" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="label">Description</label>
+                    <textarea id="description" name="description" class="textarea" rows="4" placeholder="Describe your product (freshness, variety, etc.)..."></textarea>
+                </div>
+
+                <!-- Variations Section -->
+                <div class="form-group" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <label class="label">Variations (Optional)</label>
+                    <p class="muted" style="font-size: 0.85rem;">Add different sizes or types (e.g., Small, Large, Red, Green).</p>
+                    <div id="variations-container"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addVariation()" style="margin-top: 10px; font-size: 0.9rem;">+ Add Variation</button>
+                    <input type="hidden" name="variations_json" id="variations_json">
+                </div>
+
+                <!-- Wholesale Section -->
+                <div class="form-group" style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <label class="label">Wholesale Pricing (Optional)</label>
+                    <p class="muted" style="font-size: 0.85rem;">Set lower prices for bulk orders.</p>
+                    <div id="wholesale-container"></div>
+                    <button type="button" class="btn btn-secondary" onclick="addWholesale()" style="margin-top: 10px; font-size: 0.9rem;">+ Add Wholesale Tier</button>
+                    <input type="hidden" name="wholesale_json" id="wholesale_json">
+                </div>
+
+                <div class="spacer"></div>
+
+                <div class="grid grid-2">
+                    <a href="{% url 'product_list' %}" class="btn btn-secondary" style="text-align: center;">Cancel</a>
+                    <button type="submit" class="btn btn-primary" onclick="prepareData()">Submit Product</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Variations Logic
+    function addVariation() {
+        const container = document.getElementById('variations-container');
+        const div = document.createElement('div');
+        div.className = 'grid grid-3';
+        div.style.marginBottom = '10px';
+        div.innerHTML = `
+            <input type="text" class="input var-name" placeholder="Name (e.g. Small)" required>
+            <input type="number" class="input var-price" placeholder="Price" step="0.01" required>
+            <button type="button" class="btn btn-secondary" onclick="this.parentElement.remove()" style="color: red;">&times;</button>
+        `;
+        container.appendChild(div);
+    }
+
+    // Wholesale Logic
+    function addWholesale() {
+        const container = document.getElementById('wholesale-container');
+        const div = document.createElement('div');
+        div.className = 'grid grid-3';
+        div.style.marginBottom = '10px';
+        div.innerHTML = `
+            <input type="number" class="input ws-qty" placeholder="Min Qty" required>
+            <input type="number" class="input ws-price" placeholder="Unit Price" step="0.01" required>
+            <button type="button" class="btn btn-secondary" onclick="this.parentElement.remove()" style="color: red;">&times;</button>
+        `;
+        container.appendChild(div);
+    }
+
+    function prepareData() {
+        // Process Variations
+        const variations = [];
+        document.querySelectorAll('#variations-container .grid').forEach(row => {
+            const name = row.querySelector('.var-name').value;
+            const price = row.querySelector('.var-price').value;
+            if(name && price) {
+                variations.push({name, price: parseFloat(price)});
+            }
+        });
+        document.getElementById('variations_json').value = JSON.stringify(variations);
+
+        // Process Wholesale
+        const wholesale = [];
+        document.querySelectorAll('#wholesale-container .grid').forEach(row => {
+            const qty = row.querySelector('.ws-qty').value;
+            const price = row.querySelector('.ws-price').value;
+            if(qty && price) {
+                wholesale.push({min_qty: parseInt(qty), price: parseFloat(price)});
+            }
+        });
+        document.getElementById('wholesale_json').value = JSON.stringify(wholesale);
+    }
+
+    function previewImage(input) {
+        const preview = document.getElementById('image-preview');
+        const placeholder = document.getElementById('upload-placeholder');
+        
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                preview.src = e.target.result;
+                preview.style.display = 'block';
+                placeholder.style.display = 'none';
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.src = '#';
+            preview.style.display = 'none';
+            placeholder.style.display = 'block';
+        }
+    }
+</script>
+{% endblock %}

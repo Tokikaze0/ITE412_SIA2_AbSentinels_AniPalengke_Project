@@ -1,0 +1,23 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Buyer Dashboard{% endblock %}
+{% block extra_css %}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}" />{% endblock %}
+{% block content %}
+<div class="container">
+    <h1>Welcome, {{ user.name }}</h1>
+    <div class="dashboard-grid">
+        <div class="kpi-card">
+            <div class="kpi-title">Total Orders</div>
+            <div class="kpi-value">{{ stats.total_orders }}</div>
+        </div>
+        <div class="kpi-card">
+            <div class="kpi-title">Total Spent</div>
+            <div class="kpi-value">₱{{ stats.total_spent|floatformat:2 }}</div>
+        </div>
+    </div>
+    <div class="section">
+        <h3>Recent Orders</h3>
+        <div class="empty">No orders yet</div>
+    </div>
+</div>
+{% endblock %}

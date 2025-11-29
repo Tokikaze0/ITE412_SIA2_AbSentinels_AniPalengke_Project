@@ -1,0 +1,218 @@
+{% extends 'core/base.html' %}
+
+{% block title %}{{ product.name }} · AniPalengke{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="grid grid-2" style="grid-template-columns: 1fr 1fr; gap: 40px; margin-top: 20px;">
+        <!-- Product Image -->
+        <div class="product-gallery">
+            {% if product.image %}
+            <img src="{{ product.image }}" alt="{{ product.name }}" style="width: 100%; border-radius: 12px; box-shadow: var(--shadow-md);">
+            {% else %}
+            <div style="width: 100%; height: 400px; background: #eee; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                No Image
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Product Info -->
+        <div class="product-info">
+            <div style="margin-bottom: 10px;">
+                <span class="badge">{{ product.category }}</span>
+                {% if product.location %}
+                <span class="badge" style="background: #eef2ff; color: #4f46e5;">📍 {{ product.location }}</span>
+                {% endif %}
+            </div>
+            
+            <h1 style="font-size: 2.5rem; margin-bottom: 10px; color: var(--green-700);">{{ product.name }}</h1>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <p class="muted" style="margin: 0;">Sold by <strong>{{ product.farmer_name }}</strong></p>
+                {% if request.user.is_authenticated and product.farmer_id and product.farmer_id != request.user.id %}
+                    <a href="{% url 'start_chat' product.farmer_id %}" class="btn btn-sm btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;">💬 Chat Seller</a>
+                {% endif %}
+            </div>
+            
+            <div style="font-size: 2rem; font-weight: 700; color: var(--gray-900); margin: 20px 0;">
+                ₱{{ product.price }} <span style="font-size: 1rem; font-weight: 400; color: var(--gray-500);">/ {{ product.unit|default:"kg" }}</span>
+            </div>
+            
+            <!-- Rating Summary -->
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
+                <div style="color: #f59e0b; font-size: 1.2rem;">
+                    {% with ''|center:5 as range %}
+                    {% for _ in range %}
+                        {% if forloop.counter <= product.rating|default:0|add:"0" %}
+                        <i class="fa-solid fa-star"></i>
+                        {% else %}
+                        <i class="fa-regular fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </div>
+                <span class="muted">({{ product.review_count|default:0 }} reviews)</span>
+            </div>
+
+            <p style="line-height: 1.6; color: var(--gray-700); margin-bottom: 30px;">
+                {{ product.description }}
+            </p>
+
+            <!-- Variations -->
+            {% if product.variations %}
+            <div style="margin-bottom: 20px;">
+                <label class="label">Options:</label>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    {% for variant in product.variations %}
+                    <button class="btn btn-secondary" style="border: 1px solid var(--gray-200);">
+                        {{ variant.name }} - ₱{{ variant.price }}
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Wholesale Prices -->
+            {% if product.wholesale_prices %}
+            <div style="margin-bottom: 20px; background: #f9fafb; padding: 15px; border-radius: 8px;">
+                <h4 style="margin-top: 0;">Wholesale Pricing</h4>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    {% for tier in product.wholesale_prices %}
+                    <li style="display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #ddd;">
+                        <span>Buy {{ tier.min_qty }}+</span>
+                        <span style="font-weight: 600; color: var(--green-600);">₱{{ tier.price }}/{{ product.unit|default:"kg" }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <div class="actions" style="display: flex; gap: 15px; margin-top: 30px;">
+                {% if user.is_authenticated and user.profile.role == 'buyer' %}
+                    {% if product.stock > 0 %}
+                    <form action="{% url 'add_to_cart' product.id %}" method="post" style="flex: 1; display: flex; gap: 10px;">
+                        {% csrf_token %}
+                        <div style="display: flex; align-items: center; background: #fff; border-radius: 8px; border: 1px solid #ddd; overflow: hidden;">
+                            <button type="button" onclick="updateQty(-0.5)" style="border: none; background: #f1f1f1; padding: 0 15px; height: 100%; cursor: pointer; font-size: 1.2rem; color: #555;">−</button>
+                            <div style="display: flex; flex-direction: column; align-items: center; padding: 0 10px;">
+                                <label for="qty" style="font-size: 0.7rem; color: #888; margin-top: 5px;">Qty (kg)</label>
+                                <input id="qty" class="input" type="number" min="0.5" step="0.5" value="1.0" max="{{ product.stock }}" name="quantity" readonly style="width:60px; border: none; background: transparent; text-align: center; font-size: 1.2rem; padding: 0; -moz-appearance: textfield;" />
+                            </div>
+                            <button type="button" onclick="updateQty(0.5)" style="border: none; background: #f1f1f1; padding: 0 15px; height: 100%; cursor: pointer; font-size: 1.2rem; color: #555;">+</button>
+                        </div>
+                        <button class="btn btn-primary" type="submit" style="flex: 1; padding: 15px;">Add to Cart</button>
+                    </form>
+                    <script>
+                        function updateQty(change) {
+                            const input = document.getElementById('qty');
+                            let val = parseFloat(input.value) + change;
+                            const max = parseFloat(input.getAttribute('max'));
+                            if (val < 0.5) val = 0.5;
+                            if (val > max) val = max;
+                            input.value = val.toFixed(1);
+                        }
+                    </script>
+                    {% else %}
+                    <button class="btn btn-secondary" disabled style="flex: 1; padding: 15px; cursor: not-allowed; opacity: 0.6;">Out of Stock</button>
+                    {% endif %}
+                {% else %}
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'login' %}" class="btn btn-primary" style="flex: 1; padding: 15px;">Login to Buy</a>
+                    {% endif %}
+                {% endif %}
+                <button class="btn btn-secondary" style="padding: 15px;">❤️</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reviews Section -->
+    <div style="margin-top: 60px; background: #fff; padding: 30px; border-radius: 12px; border: 1px solid #eee;">
+        <h2 style="margin-bottom: 20px;">Customer Reviews</h2>
+        
+        {% if can_review %}
+        <div style="margin-bottom: 30px; padding: 20px; background: #f9fafb; border-radius: 8px;">
+            <h4 style="margin-top: 0;">Write a Review</h4>
+            <form method="post">
+                {% csrf_token %}
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Rating</label>
+                    <div class="rating-input">
+                        <input type="radio" name="rating" value="5" id="star5" required><label for="star5">★</label>
+                        <input type="radio" name="rating" value="4" id="star4"><label for="star4">★</label>
+                        <input type="radio" name="rating" value="3" id="star3"><label for="star3">★</label>
+                        <input type="radio" name="rating" value="2" id="star2"><label for="star2">★</label>
+                        <input type="radio" name="rating" value="1" id="star1"><label for="star1">★</label>
+                    </div>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 500;">Comment</label>
+                    <textarea name="comment" class="input" rows="3" placeholder="Share your experience..." required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+            <style>
+                .rating-input { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 5px; }
+                .rating-input input { display: none; }
+                .rating-input label { font-size: 1.5rem; color: #ddd; cursor: pointer; transition: color 0.2s; }
+                .rating-input input:checked ~ label,
+                .rating-input label:hover,
+                .rating-input label:hover ~ label { color: #f59e0b; }
+            </style>
+        </div>
+        {% endif %}
+
+        <div class="reviews-list">
+            {% for review in reviews %}
+            <div class="review-item" style="border-bottom: 1px solid #eee; padding: 20px 0;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <div style="font-weight: 600;">{{ review.user_name }}</div>
+                    <div style="color: #888; font-size: 0.9rem;">{{ review.created_at|date:"M d, Y" }}</div>
+                </div>
+                <div style="color: #f59e0b; margin-bottom: 10px;">
+                    {% with ''|center:5 as range %}
+                    {% for _ in range %}
+                        {% if forloop.counter <= review.rating %}
+                        <i class="fa-solid fa-star"></i>
+                        {% else %}
+                        <i class="fa-regular fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                    {% endwith %}
+                </div>
+                <p style="color: var(--gray-700); margin: 0;">{{ review.comment }}</p>
+            </div>
+            {% empty %}
+            <p class="muted">No reviews yet.</p>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Recommendations -->
+    {% if recommendations %}
+    <div class="section" style="margin-top: 60px;">
+        <div class="section-header">
+            <h2>You Might Also Like</h2>
+        </div>
+        <div class="grid grid-4">
+            {% for product in recommendations %}
+            <article class="product-card">
+                <div class="card-media">
+                    {% if product.image %}
+                    <img src="{{ product.image }}" alt="{{ product.name }}" style="width:100%;height:100%;object-fit:cover;"/>
+                    {% else %}
+                    No Image
+                    {% endif %}
+                </div>
+                <div class="card-content">
+                    <div class="card-title"><a href="{% url 'product_detail' product.id %}" style="text-decoration: none; color: inherit;">{{ product.name }}</a></div>
+                    <div class="card-meta">
+                        <span>₱{{ product.price }}/kg</span>
+                        <span>{{ product.location }}</span>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
