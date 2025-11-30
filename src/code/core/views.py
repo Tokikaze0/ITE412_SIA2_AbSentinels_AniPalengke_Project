@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from core.utils import get_all_products
+from core.utils import get_all_products, get_all_articles, get_article
 from .ai import chat_with_gemini, analyze_image
 from .models import Article
 
@@ -12,11 +12,13 @@ def index(request):
     return render(request, 'core/index.html', {'featured_products': featured_products})
 
 def knowledge_base(request):
-    articles = Article.objects.all().order_by('-created_at')
+    articles = get_all_articles()
     return render(request, 'core/knowledge.html', {'articles': articles})
 
 def article_detail(request, article_id):
-    article = get_object_or_404(Article, pk=article_id)
+    article = get_article(article_id)
+    if not article:
+        return redirect('knowledge_base')
     return render(request, 'core/article_detail.html', {'article': article})
 
 @login_required(login_url='login')

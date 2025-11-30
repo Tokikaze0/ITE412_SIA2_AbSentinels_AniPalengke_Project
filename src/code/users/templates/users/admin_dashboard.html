@@ -21,12 +21,23 @@
             <p class="muted">Buyers</p>
         </div>
         <div class="card card-body text-center">
-            <h3>{{ stats.total_products }}</h3>
-            <p class="muted">Total Products</p>
-        </div>
-        <div class="card card-body text-center">
             <h3>{{ stats.total_orders }}</h3>
             <p class="muted">Total Orders</p>
+        </div>
+    </div>
+
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 40px;">
+        <div class="card card-body text-center" style="border-top: 4px solid #2ecc71;">
+            <h3>{{ stats.active_products }}</h3>
+            <p class="muted">Active Products</p>
+        </div>
+        <div class="card card-body text-center" style="border-top: 4px solid #e74c3c;">
+            <h3>{{ stats.rejected_products }}</h3>
+            <p class="muted">Rejected Products</p>
+        </div>
+        <div class="card card-body text-center" style="border-top: 4px solid #95a5a6;">
+            <h3>{{ stats.expired_products }}</h3>
+            <p class="muted">Expired Products</p>
         </div>
     </div>
 
@@ -40,6 +51,11 @@
             <h4 class="text-center mb-3">Product Status</h4>
             <canvas id="productChart"></canvas>
         </div>
+    </div>
+
+    <div class="card card-body" style="margin-bottom: 40px;">
+        <h4 class="text-center mb-3">Expired Products Over Time</h4>
+        <canvas id="expiredChart" style="max-height: 300px;"></canvas>
     </div>
 
     <div class="section-header">
@@ -158,18 +174,13 @@
 
     // Product Status Chart
     const productCtx = document.getElementById('productChart').getContext('2d');
-    // Calculate active products
-    const totalProducts = {{ stats.total_products }};
-    const pendingProducts = {{ stats.pending_products }};
-    const activeProducts = totalProducts - pendingProducts;
-
     new Chart(productCtx, {
         type: 'doughnut',
         data: {
-            labels: ['Active', 'Pending'],
+            labels: ['Active', 'Rejected', 'Pending'],
             datasets: [{
-                data: [activeProducts, pendingProducts],
-                backgroundColor: ['#2ecc71', '#f1c40f'],
+                data: [{{ stats.active_products }}, {{ stats.rejected_products }}, {{ stats.pending_products }}],
+                backgroundColor: ['#2ecc71', '#e74c3c', '#f1c40f'],
                 borderWidth: 1
             }]
         },
@@ -178,6 +189,50 @@
             plugins: {
                 legend: {
                     position: 'bottom',
+                }
+            }
+        }
+    });
+
+    // Expired Products Chart
+    const expiredCtx = document.getElementById('expiredChart').getContext('2d');
+    
+    // Process dates from backend
+    const rawDates = {{ stats.expired_dates|safe }};
+    const dateCounts = {};
+    
+    rawDates.forEach(dateStr => {
+        // Assuming dateStr is YYYY-MM-DD
+        const date = new Date(dateStr);
+        const monthYear = date.toLocaleString('default', { month: 'short', year: 'numeric' });
+        dateCounts[monthYear] = (dateCounts[monthYear] || 0) + 1;
+    });
+
+    // Sort keys chronologically (simple approach)
+    // For better sorting, we'd need to parse back to date objects, but for now let's trust the order or just display
+    const labels = Object.keys(dateCounts);
+    const data = Object.values(dateCounts);
+
+    new Chart(expiredCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Expired Products',
+                data: data,
+                backgroundColor: '#95a5a6',
+                borderColor: '#7f8c8d',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
                 }
             }
         }

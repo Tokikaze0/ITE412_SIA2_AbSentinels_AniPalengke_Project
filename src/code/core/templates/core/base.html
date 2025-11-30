@@ -39,6 +39,9 @@
                         <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                             <i class="fa-solid fa-gauge"></i> Dashboard
                         </a>
+                        <a href="{% url 'admin_reports' %}" class="{% if request.resolver_match.url_name == 'admin_reports' %}active{% endif %}">
+                            <i class="fa-solid fa-file-csv"></i> Reports
+                        </a>
                     {% endif %}
                     
                     <a href="{% url 'product_list' %}" class="{% if request.resolver_match.url_name == 'product_list' %}active{% endif %}">

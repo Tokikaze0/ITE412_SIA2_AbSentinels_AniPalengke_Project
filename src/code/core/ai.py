@@ -13,7 +13,10 @@ def chat_with_gemini(prompt):
         response = model.generate_content(prompt)
         return response.text
     except Exception as e:
-        return f"Error: {str(e)}"
+        error_msg = str(e)
+        if "API_KEY_HTTP_REFERRER_BLOCKED" in error_msg:
+            return "Configuration Error: The Google API Key has 'Website restrictions' enabled, but this request is coming from the server (backend). Please go to Google Cloud Console > Credentials and set 'Application restrictions' to 'None' for this API key."
+        return f"Error: {error_msg}"
 
 def analyze_image(image_file):
     try:

@@ -441,8 +441,24 @@ def get_dashboard_stats(role, user_id=None, username=None):
             # Products
             products_ref = db.collection('products')
             all_products = list(products_ref.stream())
+            
+            # Helper to safely get status
+            def get_status(p):
+                return p.to_dict().get('status', 'pending')
+
             stats['total_products'] = len(all_products)
-            stats['pending_products'] = len([p for p in all_products if p.to_dict().get('status') == 'pending'])
+            stats['active_products'] = len([p for p in all_products if get_status(p) == 'approved'])
+            stats['rejected_products'] = len([p for p in all_products if get_status(p) == 'rejected'])
+            stats['pending_products'] = len([p for p in all_products if get_status(p) == 'pending'])
+            stats['expired_products'] = len([p for p in all_products if get_status(p) == 'expired'])
+            
+            # Get expiration dates for the chart
+            expired_dates = []
+            for p in all_products:
+                data = p.to_dict()
+                if data.get('status') == 'expired' and data.get('expiration_date'):
+                    expired_dates.append(data.get('expiration_date'))
+            stats['expired_dates'] = expired_dates
             
             # Orders
             orders_ref = db.collection('orders')
@@ -691,3 +707,27 @@ def check_user_bought_product(user_id, product_id):
             print(f"Check bought error: {e}")
             return False
     return False
+
+def get_all_articles():
+    db = get_db()
+    if db:
+        try:
+            articles_ref = db.collection('articles').order_by('created_at', direction=firestore.Query.DESCENDING)
+            docs = articles_ref.stream()
+            return [{'id': doc.id, **doc.to_dict()} for doc in docs]
+        except Exception as e:
+            print(f"Get articles error: {e}")
+            return []
+    return []
+
+def get_article(article_id):
+    db = get_db()
+    if db:
+        try:
+            doc = db.collection('articles').document(article_id).get()
+            if doc.exists:
+                return {'id': doc.id, **doc.to_dict()}
+        except Exception as e:
+            print(f"Get article error: {e}")
+            return None
+    return None

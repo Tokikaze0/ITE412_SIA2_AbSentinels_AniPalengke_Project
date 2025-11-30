@@ -18,5 +18,6 @@ urlpatterns = [
     path('admin/products/approve/<str:product_id>/', views.approve_product_view, name='approve_product'),
     path('admin/products/<str:product_id>/<str:action>/', views.admin_product_action, name='admin_product_action'),
     path('admin/farmers/verify/<str:user_id>/', views.admin_verify_farmer, name='admin_verify_farmer'),
+    path('admin/reports/', views.admin_reports, name='admin_reports'),
     path('notifications/read/<str:notification_id>/', views.mark_notification_read_view, name='mark_notification_read'),
 ]
