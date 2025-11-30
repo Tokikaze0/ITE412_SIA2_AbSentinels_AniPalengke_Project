@@ -51,7 +51,12 @@
 
                     <div class="form-group">
                         <label for="location" class="label">Location</label>
-                        <input type="text" id="location" name="location" class="input" value="{{ user_data.location|default:'' }}" placeholder="e.g. Bulacan, Pampanga">
+                        <div style="display: flex; gap: 10px;">
+                            <input type="text" id="location" name="location" class="input" value="{{ user_data.location|default:'' }}" placeholder="e.g. Bulacan, Pampanga" style="flex: 1;">
+                            <button type="button" id="getLocationBtn" class="btn btn-ghost" title="Use my current location">
+                                <i class="fa-solid fa-location-crosshairs"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <div class="form-group">
@@ -95,4 +100,58 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('getLocationBtn').addEventListener('click', function() {
+        const btn = this;
+        const input = document.getElementById('location');
+        
+        if (!navigator.geolocation) {
+            alert('Geolocation is not supported by your browser');
+            return;
+        }
+
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+        btn.disabled = true;
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                // Success
+                const lat = position.coords.latitude;
+                const lng = position.coords.longitude;
+                
+                // Use OpenStreetMap Nominatim for free reverse geocoding (client-side)
+                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Try to get a shorter address format if possible
+                        const address = data.address;
+                        let formatted = data.display_name;
+                        if (address) {
+                            const parts = [address.city || address.town || address.village, address.state || address.province, address.country];
+                            formatted = parts.filter(Boolean).join(', ');
+                        }
+                        
+                        input.value = formatted;
+                        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                        btn.disabled = false;
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        input.value = `${lat}, ${lng}`;
+                        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                        btn.disabled = false;
+                    });
+            },
+            (error) => {
+                // Error
+                alert('Unable to retrieve your location. Please allow location access.');
+                btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                btn.disabled = false;
+            }
+        );
+    });
+</script>
 {% endblock %}
