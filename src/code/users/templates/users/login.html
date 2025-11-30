@@ -119,6 +119,11 @@
   const btn = document.getElementById('google-signin-btn');
   if (btn) {
       btn.addEventListener('click', () => {
+        // Disable button to prevent double clicks
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+        btn.style.cursor = 'not-allowed';
+        
         updateStatus('Opening Google Sign-In...');
         
         // Always force popup to allow account selection
@@ -128,13 +133,18 @@
             authenticateBackend(result.user);
           })
           .catch((error) => {
+            // Re-enable button on error
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.cursor = 'pointer';
+            
             console.error('Firebase Auth Error:', error);
             let msg = 'Sign-In Failed: ' + error.message;
             
-            if (error.code === 'auth/popup-closed-by-user') {
-                msg = 'Sign-In cancelled by user.';
+            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') {
+                msg = 'Sign-In cancelled. Please try again.';
             } else if (error.code === 'auth/unauthorized-domain') {
-                msg = 'Domain not authorized in Firebase Console.\n\nACTION REQUIRED:\n1. Go to Firebase Console > Authentication > Settings > Authorized Domains.\n2. Add "localhost" AND "127.0.0.1".\n3. If using ngrok or similar, add that domain too.';
+                msg = 'Domain not authorized in Firebase Console.\n\nACTION REQUIRED:\n1. Go to Firebase Console > Authentication > Settings > Authorized Domains.\n2. Add "anipalengke.onrender.com".';
             }
             
             updateStatus(msg, true);
