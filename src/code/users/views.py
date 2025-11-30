@@ -3,6 +3,8 @@ from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from django.core.mail import send_mail
 import random
+import csv
+from django.http import HttpResponse
 from core.utils import get_all_products, update_product_status, get_product, create_user_firestore, authenticate_user_firestore, get_all_farmers, verify_farmer_firestore, update_user_firestore, change_password_firestore, get_user_by_id, get_dashboard_stats, approve_product, check_expired_products, get_user_notifications, mark_notification_read, get_db, get_user_by_email, reset_password_firestore
 from core.ai import validate_crop
 import json
@@ -531,5 +533,46 @@ def reset_password_view(request):
                 messages.error(request, "Failed to reset password.")
                 
     return render(request, 'users/reset_password.html')
+
+def admin_reports(request):
+    if not request.user.is_authenticated or request.session.get('role') != 'admin':
+        return redirect('index')
+
+    if request.method == 'POST':
+        report_type = request.POST.get('report_type')
+        start_date = request.POST.get('start_date')
+        end_date = request.POST.get('end_date')
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="{report_type}_report.csv"'
+
+        writer = csv.writer(response)
+        db = get_db()
+
+        if report_type == 'users':
+            writer.writerow(['Username', 'Email', 'Role', 'Is Verified', 'Date Joined'])
+            users = db.collection('users').stream()
+            for user in users:
+                u = user.to_dict()
+                # Simple date filtering could be added here if 'created_at' is consistent
+                writer.writerow([u.get('username'), u.get('email'), u.get('role'), u.get('is_verified'), u.get('created_at', 'N/A')])
+
+        elif report_type == 'products':
+            writer.writerow(['Name', 'Farmer', 'Category', 'Price', 'Stock', 'Status', 'Expiration Date'])
+            products = db.collection('products').stream()
+            for product in products:
+                p = product.to_dict()
+                writer.writerow([p.get('name'), p.get('farmer_name'), p.get('category'), p.get('price'), p.get('stock'), p.get('status'), p.get('expiration_date', 'N/A')])
+
+        elif report_type == 'orders':
+            writer.writerow(['Order ID', 'Buyer', 'Total Amount', 'Status', 'Date'])
+            orders = db.collection('orders').stream()
+            for order in orders:
+                o = order.to_dict()
+                writer.writerow([order.id, o.get('buyer_name'), o.get('total_amount'), o.get('status'), o.get('created_at', 'N/A')])
+
+        return response
+
+    return render(request, 'users/admin_reports.html')
 
 
