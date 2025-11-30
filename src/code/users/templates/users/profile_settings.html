@@ -2,6 +2,10 @@
 
 {% block title %}Account Settings · AniPalengke{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+{% endblock %}
+
 {% block content %}
 <div class="container settings-container">
     <div class="section-header">
@@ -57,6 +61,8 @@
                                 <i class="fa-solid fa-location-crosshairs"></i>
                             </button>
                         </div>
+                        <div id="map" style="height: 300px; margin-top: 10px; border-radius: 8px; border: 1px solid #ddd;"></div>
+                        <small class="muted">Drag the marker to pinpoint your exact location.</small>
                     </div>
 
                     <div class="form-group">
@@ -103,55 +109,87 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
+    // Initialize Map
+    // Default to Manila
+    let map = L.map('map').setView([14.5995, 120.9842], 12);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    let marker = L.marker([14.5995, 120.9842], {draggable: true}).addTo(map);
+
+    // Function to update input from coordinates
+    function updateAddressFromCoords(lat, lng) {
+        const input = document.getElementById('location');
+        // Use OpenStreetMap Nominatim for reverse geocoding
+        fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
+            .then(response => response.json())
+            .then(data => {
+                const address = data.address;
+                let formatted = data.display_name;
+                if (address) {
+                    // Construct a cleaner address
+                    const parts = [
+                        address.road,
+                        address.suburb || address.neighborhood,
+                        address.city || address.town || address.village,
+                        address.state || address.province
+                    ];
+                    formatted = parts.filter(Boolean).join(', ');
+                }
+                input.value = formatted;
+            })
+            .catch(err => console.error('Geocoding error:', err));
+    }
+
+    // Update on marker drag
+    marker.on('dragend', function(e) {
+        const position = marker.getLatLng();
+        updateAddressFromCoords(position.lat, position.lng);
+    });
+
+    // Get Current Location Button
     document.getElementById('getLocationBtn').addEventListener('click', function() {
         const btn = this;
-        const input = document.getElementById('location');
         
         if (!navigator.geolocation) {
             alert('Geolocation is not supported by your browser');
             return;
         }
 
+        const originalContent = btn.innerHTML;
         btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
         btn.disabled = true;
 
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                // Success
                 const lat = position.coords.latitude;
                 const lng = position.coords.longitude;
                 
-                // Use OpenStreetMap Nominatim for free reverse geocoding (client-side)
-                fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        // Try to get a shorter address format if possible
-                        const address = data.address;
-                        let formatted = data.display_name;
-                        if (address) {
-                            const parts = [address.city || address.town || address.village, address.state || address.province, address.country];
-                            formatted = parts.filter(Boolean).join(', ');
-                        }
-                        
-                        input.value = formatted;
-                        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
-                        btn.disabled = false;
-                    })
-                    .catch(err => {
-                        console.error(err);
-                        input.value = `${lat}, ${lng}`;
-                        btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
-                        btn.disabled = false;
-                    });
+                // Update Map
+                map.setView([lat, lng], 16);
+                marker.setLatLng([lat, lng]);
+                
+                // Update Input
+                updateAddressFromCoords(lat, lng);
+                
+                btn.innerHTML = originalContent;
+                btn.disabled = false;
             },
             (error) => {
-                // Error
                 alert('Unable to retrieve your location. Please allow location access.');
-                btn.innerHTML = '<i class="fa-solid fa-location-crosshairs"></i>';
+                btn.innerHTML = originalContent;
                 btn.disabled = false;
             }
         );
     });
+    
+    // Try to set map location if input has value (Simple check)
+    // This is a basic implementation. For better results, we'd need to forward geocode the input value on load.
+    // For now, we'll just leave it at default or let the user set it.
 </script>
 {% endblock %}
