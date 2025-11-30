@@ -33,6 +33,9 @@ DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://anipalengke.onrender.com',
+]
 
 # Application definition
 
