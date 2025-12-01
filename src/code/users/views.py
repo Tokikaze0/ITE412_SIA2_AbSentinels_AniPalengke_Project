@@ -139,12 +139,38 @@ def register_view(request):
         
         # Send Verification Email
         try:
+            subject = 'Verify your AniPalengke Account'
+            message = f'''Welcome to AniPalengke!
+
+Thank you for signing up. To complete your registration, please use the following verification code:
+
+{otp}
+
+If you did not request this, please ignore this email.
+
+Best regards,
+The AniPalengke Team'''
+            
+            html_message = f'''
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;">
+                <h2 style="color: #2e7d32; text-align: center;">Welcome to AniPalengke!</h2>
+                <p style="color: #333; font-size: 16px;">Thank you for signing up. To complete your registration, please use the verification code below:</p>
+                <div style="background-color: #f1f8e9; padding: 15px; text-align: center; border-radius: 5px; margin: 20px 0;">
+                    <span style="font-size: 24px; font-weight: bold; letter-spacing: 5px; color: #2e7d32;">{otp}</span>
+                </div>
+                <p style="color: #666; font-size: 14px;">If you did not request this, please ignore this email.</p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;">
+                <p style="color: #999; font-size: 12px; text-align: center;">&copy; 2025 AniPalengke. All rights reserved.</p>
+            </div>
+            '''
+
             send_mail(
-                'Verify your AniPalengke Account',
-                f'Your verification code is: {otp}',
+                subject,
+                message,
                 'noreply@anipalengke.com',
                 [email],
                 fail_silently=False,
+                html_message=html_message
             )
             messages.info(request, "A verification code has been sent to your email.")
             return redirect('verify_registration')
