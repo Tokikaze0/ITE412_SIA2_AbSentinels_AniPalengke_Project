@@ -206,8 +206,17 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # Session Configuration
 SESSION_ENGINE = 'django.contrib.sessions.backends.file'
 
-# Email Configuration (Development)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# Email Configuration
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+
+if not EMAIL_HOST_USER:
+    # Fallback to console if no email is configured
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 # Security Settings for Google Sign-In
 # This is required to allow the Google Sign-In popup to communicate with the window
