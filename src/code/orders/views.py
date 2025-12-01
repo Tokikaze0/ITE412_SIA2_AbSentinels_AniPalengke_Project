@@ -447,13 +447,61 @@ def order_history(request):
     
     if getattr(request.user, 'profile', None) and request.user.profile.role == 'farmer':
         orders = get_farmer_orders(request.user.id)
+        
         # Filter items in each order to only show products from this farmer
+        filtered_orders = []
+        
+        # Get filter params
+        status_filter = request.GET.get('status')
+        date_filter = request.GET.get('date')
+        product_filter = request.GET.get('product')
+
         for order in orders:
-            order['items'] = [item for item in order.get('items', []) if item.get('farmer_id') == request.user.id]
-            # Recalculate total for this farmer's portion (optional, but good for display)
+            # 1. Filter by Status
+            if status_filter and order.get('status') != status_filter:
+                continue
+
+            # 2. Filter by Date
+            if date_filter:
+                # order['created_at'] is likely a datetime object or string. 
+                # Firestore returns datetime with timezone.
+                created_at = order.get('created_at')
+                if created_at:
+                    # Convert to string YYYY-MM-DD for comparison
+                    if hasattr(created_at, 'strftime'):
+                        order_date = created_at.strftime('%Y-%m-%d')
+                    else:
+                        # If it's a string, try to parse or just compare prefix
+                        order_date = str(created_at)[:10]
+                    
+                    if order_date != date_filter:
+                        continue
+
+            # Filter items for this farmer
+            farmer_items = [item for item in order.get('items', []) if item.get('farmer_id') == request.user.id]
+            
+            # 3. Filter by Product Name
+            if product_filter:
+                farmer_items = [item for item in farmer_items if product_filter.lower() in item.get('product_name', '').lower()]
+                if not farmer_items:
+                    continue # Skip order if no items match
+
+            order['items'] = farmer_items
+            
+            # Recalculate total for this farmer's portion
             order['farmer_total'] = sum(item['subtotal'] for item in order['items'])
             
-        return render(request, 'orders/farmer_order_history.html', {'orders': orders})
+            if order['items']: # Only add if there are items left
+                filtered_orders.append(order)
+            
+        return render(request, 'orders/farmer_order_history.html', {
+            'orders': filtered_orders,
+            'filters': {
+                'status': status_filter,
+                'date': date_filter,
+                'product': product_filter
+            }
+        })
     else:
         orders = get_user_orders(request.user.id)
         return render(request, 'orders/order_history.html', {'orders': orders})

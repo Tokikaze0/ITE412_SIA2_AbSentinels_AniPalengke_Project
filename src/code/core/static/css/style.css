@@ -689,3 +689,18 @@ img { max-width: 100%; display: block; }
     padding-top: 1rem;
   }
 }
+
+.badge-notification {
+    position: absolute;
+    top: -5px;
+    right: -10px;
+    background-color: #ef4444;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: bold;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 18px;
+    text-align: center;
+    line-height: 1;
+}

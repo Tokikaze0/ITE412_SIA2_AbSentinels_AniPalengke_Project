@@ -50,8 +50,11 @@
                     <a href="{% url 'community_feed' %}" class="{% if request.resolver_match.url_name == 'community_feed' %}active{% endif %}">
                         <i class="fa-solid fa-users"></i> Community
                     </a>
-                    <a href="{% url 'inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}">
+                    <a href="{% url 'inbox' %}" class="{% if request.resolver_match.url_name == 'inbox' %}active{% endif %}" style="position: relative;">
                         <i class="fa-solid fa-envelope"></i> Messages
+                        {% if unread_messages_count > 0 %}
+                        <span class="badge-notification">{{ unread_messages_count }}</span>
+                        {% endif %}
                     </a>
                     <a href="{% url 'knowledge_base' %}" class="{% if request.resolver_match.url_name == 'knowledge_base' %}active{% endif %}">
                         <i class="fa-solid fa-book-open"></i> Learn
@@ -61,9 +64,11 @@
                         <a href="{% url 'order_history' %}" class="{% if request.resolver_match.url_name == 'order_history' %}active{% endif %}">
                             <i class="fa-solid fa-box"></i> Orders
                         </a>
+                        {% if user.profile.role != 'farmer' %}
                         <a href="{% url 'cart' %}" class="{% if request.resolver_match.url_name == 'cart' %}active{% endif %}">
                             <i class="fa-solid fa-shopping-cart"></i> Cart
                         </a>
+                        {% endif %}
                     {% endif %}
                     
                     <a href="{% url 'profile_settings' %}" class="{% if request.resolver_match.url_name == 'profile_settings' %}active{% endif %}">

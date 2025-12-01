@@ -9,6 +9,36 @@
         <p class="muted">Track orders from buyers who purchased your products.</p>
     </div>
 
+    <!-- Filter Form -->
+    <div class="card" style="margin-bottom: 20px;">
+        <div class="card-body">
+            <form method="get" style="display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-end;">
+                <div style="flex: 1; min-width: 200px;">
+                    <label class="label" style="font-size: 0.85rem; margin-bottom: 4px;">Product Name</label>
+                    <input type="text" name="product" class="input" placeholder="Search product..." value="{{ filters.product|default:'' }}">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label class="label" style="font-size: 0.85rem; margin-bottom: 4px;">Status</label>
+                    <select name="status" class="select">
+                        <option value="">All Statuses</option>
+                        <option value="Pending" {% if filters.status == 'Pending' %}selected{% endif %}>Pending</option>
+                        <option value="Packed" {% if filters.status == 'Packed' %}selected{% endif %}>Packed</option>
+                        <option value="Shipped" {% if filters.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                        <option value="Out for Delivery" {% if filters.status == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+                        <option value="Delivered" {% if filters.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                        <option value="Cancelled" {% if filters.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                    </select>
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label class="label" style="font-size: 0.85rem; margin-bottom: 4px;">Date</label>
+                    <input type="date" name="date" class="input" value="{{ filters.date|default:'' }}">
+                </div>
+                <button type="submit" class="btn btn-primary" style="height: 42px;">Filter</button>
+                <a href="{% url 'order_history' %}" class="btn btn-ghost" style="height: 42px; line-height: 42px;">Reset</a>
+            </form>
+        </div>
+    </div>
+
     {% if not orders %}
     <div class="card card-body" style="text-align: center; padding: 40px;">
         <div style="font-size: 3rem; margin-bottom: 10px;">📉</div>

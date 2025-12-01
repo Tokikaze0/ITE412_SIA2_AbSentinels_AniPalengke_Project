@@ -32,6 +32,12 @@
                 </div>
             </div>
 
+            {% if post.image_url %}
+                <div style="margin-bottom: 2rem;">
+                    <img src="{{ post.image_url }}" alt="Post Image" style="max-width: 100%; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+                </div>
+            {% endif %}
+
             <div style="font-size: 1.125rem; line-height: 1.7; color: var(--gray-700);">
                 {{ post.content|linebreaks }}
             </div>

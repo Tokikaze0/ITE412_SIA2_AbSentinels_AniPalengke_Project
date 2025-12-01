@@ -84,17 +84,26 @@
             {{ other_user.name|default:other_user.username }}
         </div>
         <div class="chat-messages" id="chat-messages">
-            {% for message in messages %}
+            {% for message in chat_messages %}
                 <div class="message {% if message.sender_id == request.user.id %}sent{% else %}received{% endif %}">
-                    {{ message.content }}
+                    {% if message.image %}
+                        <img src="{{ message.image.url }}" alt="Image" style="max-width: 200px; border-radius: 8px; margin-bottom: 5px;">
+                    {% endif %}
+                    {% if message.content %}
+                        <div>{{ message.content }}</div>
+                    {% endif %}
                     <div class="message-time">{{ message.timestamp|date:"g:i A" }}</div>
                 </div>
             {% endfor %}
         </div>
         <div class="chat-input-area">
-            <form method="post" class="chat-form">
+            <form method="post" class="chat-form" enctype="multipart/form-data">
                 {% csrf_token %}
-                <input type="text" name="content" class="chat-input" placeholder="Type a message..." required autocomplete="off">
+                <label for="image-upload" class="btn btn-ghost" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center; cursor: pointer;">
+                    <i class="fa-solid fa-image"></i>
+                    <input type="file" id="image-upload" name="image" accept="image/*" style="display: none;" onchange="document.getElementById('content-input').placeholder = 'Image selected...'">
+                </label>
+                <input type="text" id="content-input" name="content" class="chat-input" placeholder="Type a message..." autocomplete="off">
                 <button type="submit" class="btn btn-primary" style="border-radius: 50%; width: 40px; height: 40px; padding: 0; display: flex; align-items: center; justify-content: center;">➤</button>
             </form>
         </div>
@@ -119,7 +128,7 @@
                         // Clear and rebuild (simple approach, can be optimized)
                         chatMessages.innerHTML = '';
                         data.messages.forEach(msg => {
-                            const isSent = msg.sender__id === currentUserId;
+                            const isSent = msg.sender_id === currentUserId;
                             const div = document.createElement('div');
                             div.className = `message ${isSent ? 'sent' : 'received'}`;
                             
@@ -127,8 +136,16 @@
                             const date = new Date(msg.timestamp);
                             const timeStr = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
                             
+                            let contentHtml = '';
+                            if (msg.image_url) {
+                                contentHtml += `<img src="${msg.image_url}" alt="Image" style="max-width: 200px; border-radius: 8px; margin-bottom: 5px; display: block;">`;
+                            }
+                            if (msg.content) {
+                                contentHtml += `<div>${msg.content}</div>`;
+                            }
+
                             div.innerHTML = `
-                                ${msg.content}
+                                ${contentHtml}
                                 <div class="message-time">${timeStr}</div>
                             `;
                             chatMessages.appendChild(div);
