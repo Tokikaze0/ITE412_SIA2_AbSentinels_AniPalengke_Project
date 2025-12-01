@@ -17,13 +17,16 @@
         <select class="input" name="category">
           <option value="">All Categories</option>
           <option value="Gulay" {% if request.GET.category == 'Gulay' %}selected{% endif %}>Gulay</option>
+          <option value="Prutas" {% if request.GET.category == 'Prutas' %}selected{% endif %}>Prutas</option>
           <option value="Root Crops" {% if request.GET.category == 'Root Crops' %}selected{% endif %}>Root Crops</option>
+          <option value="Other" {% if request.GET.category == 'Other' %}selected{% endif %}>Other</option>
         </select>
         <select class="input" name="location">
           <option value="">All Locations</option>
           <option value="Alcate" {% if request.GET.location == 'Alcate' %}selected{% endif %}>Alcate</option>
           <option value="Bayani" {% if request.GET.location == 'Bayani' %}selected{% endif %}>Bayani</option>
           <option value="Inarawan" {% if request.GET.location == 'Inarawan' %}selected{% endif %}>Inarawan</option>
+          <option value="Villa Cerveza" {% if request.GET.location == 'Villa Cerveza' %}selected{% endif %}>Villa Cerveza</option>
         </select>
         <button class="btn btn-secondary" type="submit">Search</button>
       </form>

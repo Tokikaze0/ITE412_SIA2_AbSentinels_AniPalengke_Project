@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from core.utils import get_all_products, get_all_articles, get_article
+from core.utils import get_all_products, get_all_articles, get_article, get_flash_sale_products
 from .ai import chat_with_gemini, analyze_image
 from .models import Article
 
@@ -9,7 +9,14 @@ def index(request):
     # Get first 4 products for display as featured
     all_products = get_all_products()
     featured_products = all_products[:4] if all_products else []
-    return render(request, 'core/index.html', {'featured_products': featured_products})
+    
+    # Get flash sale products
+    flash_sale_products = get_flash_sale_products()
+    
+    return render(request, 'core/index.html', {
+        'featured_products': featured_products,
+        'flash_sale_products': flash_sale_products
+    })
 
 def knowledge_base(request):
     articles = get_all_articles()
