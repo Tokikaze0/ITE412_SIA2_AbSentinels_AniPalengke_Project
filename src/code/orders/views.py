@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from core.utils import get_product, save_order, get_user_orders, get_farmer_orders, update_product_stock
+from core.utils import get_product, save_order, get_user_orders, get_farmer_orders, update_product_stock, update_order_status
 from .logistics import calculate_shipping_fee, generate_tracking_number, get_tracking_status
 from .payments import create_gcash_payment_link, verify_gcash_payment
 import datetime
@@ -457,4 +457,71 @@ def order_history(request):
     else:
         orders = get_user_orders(request.user.id)
         return render(request, 'orders/order_history.html', {'orders': orders})
+
+def update_order_status_view(request, order_id):
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "You must be logged in.")
+            return redirect('login')
+            
+        # Check if user is farmer
+        if not (getattr(request.user, 'profile', None) and request.user.profile.role == 'farmer'):
+             messages.error(request, "Only farmers can update order status.")
+             return redirect('order_history')
+
+        new_status = request.POST.get('status')
+        if new_status:
+            if update_order_status(order_id, new_status):
+                messages.success(request, f"Order status updated to {new_status}.")
+            else:
+                messages.error(request, "Failed to update order status.")
+        
+    return redirect('track_order', order_id=order_id)
+
+def cancel_order(request, order_id):
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "You must be logged in.")
+            return redirect('login')
+        
+        orders = get_user_orders(request.user.id)
+        order = next((o for o in orders if o['id'] == order_id), None)
+        
+        if not order:
+            messages.error(request, "Order not found.")
+            return redirect('order_history')
+            
+        if order['status'] == 'Pending':
+            if update_order_status(order_id, 'Cancelled'):
+                messages.success(request, "Order cancelled successfully.")
+            else:
+                messages.error(request, "Failed to cancel order.")
+        else:
+            messages.error(request, "Cannot cancel order at this stage.")
+            
+    return redirect('order_history')
+
+def request_refund(request, order_id):
+    if request.method == 'POST':
+        if not request.user.is_authenticated:
+            messages.error(request, "You must be logged in.")
+            return redirect('login')
+            
+        orders = get_user_orders(request.user.id)
+        order = next((o for o in orders if o['id'] == order_id), None)
+        
+        if not order:
+            messages.error(request, "Order not found.")
+            return redirect('order_history')
+            
+        # Allow refund request if Delivered
+        if order['status'] == 'Delivered':
+            if update_order_status(order_id, 'Refund Requested'):
+                messages.success(request, "Refund requested successfully.")
+            else:
+                messages.error(request, "Failed to request refund.")
+        else:
+            messages.error(request, "Cannot request refund for this order.")
+            
+    return redirect('order_history')
 

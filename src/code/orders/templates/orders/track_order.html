@@ -10,6 +10,26 @@
         <p class="muted">Tracking Number: {{ order.tracking_number }}</p>
     </div>
 
+    {% if request.user.profile.role == 'farmer' %}
+    <div class="card" style="margin-bottom: 20px; border: 1px solid #e5e7eb;">
+        <div class="card-body">
+            <h4 style="margin-top: 0;">Update Order Status</h4>
+            <form action="{% url 'update_order_status' order.id %}" method="POST" style="display: flex; gap: 10px; align-items: center;">
+                {% csrf_token %}
+                <select name="status" class="form-control" style="max-width: 200px; padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                    <option value="Pending" {% if order.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Packed" {% if order.status == 'Packed' %}selected{% endif %}>Packed</option>
+                    <option value="Shipped" {% if order.status == 'Shipped' %}selected{% endif %}>Shipped</option>
+                    <option value="Out for Delivery" {% if order.status == 'Out for Delivery' %}selected{% endif %}>Out for Delivery</option>
+                    <option value="Delivered" {% if order.status == 'Delivered' %}selected{% endif %}>Delivered</option>
+                    <option value="Cancelled" {% if order.status == 'Cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+                <button type="submit" class="btn btn-primary">Update Status</button>
+            </form>
+        </div>
+    </div>
+    {% endif %}
+
     <div class="card">
         <div class="card-body">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">

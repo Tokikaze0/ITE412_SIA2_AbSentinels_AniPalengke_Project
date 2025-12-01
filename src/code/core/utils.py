@@ -56,6 +56,22 @@ def get_all_products(query=None, category=None, location=None, status='approved'
         res = [p for p in res if q in p['name'].lower() or q in p['farmer_name'].lower()]
     return res
 
+def get_flash_sale_products():
+    db = get_db()
+    if db:
+        try:
+            ref = db.collection('products')
+            # Filter by is_flash_sale = True
+            ref = ref.where('is_flash_sale', '==', True).where('status', '==', 'approved')
+            
+            docs = ref.stream()
+            products = [{'id': doc.id, **doc.to_dict()} for doc in docs]
+            return products
+        except Exception as e:
+            print(f"Firestore read error (flash sales): {e}")
+            return []
+    return []
+
 def save_product(product_data):
     db = get_db()
     if db:
@@ -731,3 +747,14 @@ def get_article(article_id):
             print(f"Get article error: {e}")
             return None
     return None
+
+def update_order_status(order_id, new_status):
+    db = get_db()
+    if db:
+        try:
+            db.collection('orders').document(order_id).update({'status': new_status})
+            return True
+        except Exception as e:
+            print(f"Update order error: {e}")
+            return False
+    return False
