@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
+from django.core.files.storage import FileSystemStorage
 from core.utils import get_all_posts, create_post_firestore, get_post, add_comment_firestore
 
 def community_feed(request):
@@ -22,12 +23,20 @@ def create_post(request):
             messages.error(request, "Only admins can create announcements.")
             return redirect('community_feed')
             
+        image_url = None
+        if request.FILES.get('image'):
+            image = request.FILES['image']
+            fs = FileSystemStorage()
+            filename = fs.save(f'community_images/{image.name}', image)
+            image_url = fs.url(filename)
+
         create_post_firestore(
             title=title,
             content=content,
             author_id=request.user.id,
             author_name=request.user.name,
-            post_type=post_type
+            post_type=post_type,
+            image_url=image_url
         )
         messages.success(request, "Post created successfully.")
         return redirect('community_feed')

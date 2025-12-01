@@ -375,7 +375,7 @@ def get_all_posts():
                 pass
     return []
 
-def create_post_firestore(title, content, author_id, author_name, post_type='discussion'):
+def create_post_firestore(title, content, author_id, author_name, post_type='discussion', image_url=None):
     db = get_db()
     if db:
         try:
@@ -386,7 +386,8 @@ def create_post_firestore(title, content, author_id, author_name, post_type='dis
                 'author_name': author_name,
                 'post_type': post_type,
                 'created_at': firestore.SERVER_TIMESTAMP,
-                'comments': []
+                'comments': [],
+                'image_url': image_url
             }
             db.collection('posts').add(data)
             return True
@@ -544,14 +545,51 @@ def get_dashboard_stats(role, user_id=None, username=None):
             # Orders
             orders_ref = db.collection('orders')
             my_orders = list(orders_ref.where('user_id', '==', user_id).stream())
+            
+            # Sort by date descending
+            # Handle cases where created_at might be missing or in different formats
+            def get_order_date(doc):
+                data = doc.to_dict()
+                val = data.get('created_at')
+                if val:
+                    return val
+                return datetime.datetime.min
+
+            import datetime
+            my_orders.sort(key=get_order_date, reverse=True)
+
             stats['total_orders'] = len(my_orders)
             
             total_spent = 0
+            monthly_spending = {}
+            
             for order_doc in my_orders:
                 order = order_doc.to_dict()
                 total_spent += order.get('total_amount', 0)
-            
+                
+                # Analytics: Monthly Spending
+                created_at = order.get('created_at')
+                if created_at:
+                    # Firestore Timestamp or datetime
+                    if hasattr(created_at, 'strftime'):
+                        month_key = created_at.strftime('%b %Y') # e.g., "Dec 2023"
+                        # We need a sortable key for sorting, but display key for chart
+                        # Let's use a tuple or just sort keys differently later
+                        sort_key = created_at.strftime('%Y-%m')
+                        
+                        if sort_key not in monthly_spending:
+                            monthly_spending[sort_key] = {'label': month_key, 'amount': 0}
+                        monthly_spending[sort_key]['amount'] += order.get('total_amount', 0)
+
             stats['total_spent'] = total_spent
+            
+            # Recent Orders (Top 5)
+            stats['recent_orders'] = [{'id': doc.id, **doc.to_dict()} for doc in my_orders[:5]]
+            
+            # Prepare chart data (sorted by date)
+            sorted_keys = sorted(monthly_spending.keys())
+            stats['chart_labels'] = [monthly_spending[k]['label'] for k in sorted_keys]
+            stats['chart_data'] = [monthly_spending[k]['amount'] for k in sorted_keys]
 
     except Exception as e:
         print(f'Stats error: {e}')

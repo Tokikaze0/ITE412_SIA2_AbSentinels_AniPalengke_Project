@@ -15,9 +15,85 @@
             <div class="kpi-value">₱{{ stats.total_spent|floatformat:2 }}</div>
         </div>
     </div>
-    <div class="section">
-        <h3>Recent Orders</h3>
-        <div class="empty">No orders yet</div>
+
+    <!-- Analytics Chart -->
+    <div class="section" style="margin-top: 2rem;">
+        <h3>Spending Analytics</h3>
+        <div class="card" style="padding: 1rem;">
+            <canvas id="spendingChart" width="400" height="150"></canvas>
+        </div>
     </div>
+
+    <!-- Recent Orders -->
+    <div class="section" style="margin-top: 2rem;">
+        <h3>Recent Orders</h3>
+        {% if stats.recent_orders %}
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Date</th>
+                        <th>Total</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for order in stats.recent_orders %}
+                    <tr>
+                        <td>#{{ order.id|slice:":8" }}</td>
+                        <td>{{ order.created_at|date:"M d, Y" }}</td>
+                        <td>₱{{ order.total_amount|floatformat:2 }}</td>
+                        <td>
+                            <span class="badge badge-{{ order.status|lower }}">
+                                {{ order.status|title }}
+                            </span>
+                        </td>
+                        <td>
+                            <a href="{% url 'track_order' order.id %}" class="btn btn-sm btn-ghost">View</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty">No orders yet</div>
+        {% endif %}
+    </div>
+
+    <!-- Chart.js Script -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const ctx = document.getElementById('spendingChart').getContext('2d');
+        const spendingChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: {{ stats.chart_labels|safe }},
+                datasets: [{
+                    label: 'Monthly Spending (₱)',
+                    data: {{ stats.chart_data|safe }},
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return '₱' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
 </div>
 {% endblock %}

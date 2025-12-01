@@ -27,7 +27,8 @@ def inbox(request):
             'id': chat.id,
             'other_user': other_user,
             'last_message': chat.messages.last(),
-            'updated_at': chat.updated_at
+            'updated_at': chat.updated_at,
+            'unread_count': chat.messages.filter(is_read=False).exclude(sender_id=request.user.id).count()
         })
         
     return render(request, 'chat/inbox.html', {'conversations': chat_data})
@@ -52,18 +53,21 @@ def chat_room(request, conversation_id):
     
     if request.method == 'POST':
         content = request.POST.get('content')
-        if content:
+        image = request.FILES.get('image')
+        
+        if content or image:
             Message.objects.create(
                 conversation=conversation,
                 sender_id=request.user.id,
-                content=content
+                content=content if content else '',
+                image=image
             )
             conversation.save() # Update updated_at
             return redirect('chat_room', conversation_id=conversation.id)
             
     return render(request, 'chat/room.html', {
         'conversation': conversation,
-        'messages': messages,
+        'chat_messages': messages,
         'other_user': other_user,
         'current_user_id': request.user.id
     })
@@ -112,6 +116,7 @@ def get_messages(request, conversation_id):
             'sender__username': sender_name, # Frontend expects this key
             'sender_id': msg.sender_id,
             'content': msg.content,
+            'image_url': msg.image.url if msg.image else None,
             'timestamp': msg.timestamp
         })
         
